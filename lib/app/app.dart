@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fe_nexa_app/app/theme/nexa_theme.dart';
 
-/// Raiz do aplicativo: aplica o tema Porcelana.
-///
-/// TODO: trocar o `home` pela tela Início (pasta `features/inicio/`) quando
-/// ela for criada. Por enquanto é só um fundo vazio com o tema aplicado.
+import '../shared/widgets/nexa_button.dart';
+
 class NexaApp extends StatelessWidget {
   const NexaApp({super.key});
 
@@ -14,7 +12,32 @@ class NexaApp extends StatelessWidget {
       title: 'Nexa',
       debugShowCheckedModeBanner: false,
       theme: buildNexaTheme(),
-      home: const Scaffold(),
+      home: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              NexaButton(label: 'Entrar', onPressed: () {}),
+              const SizedBox(height: 12),
+              NexaButton(
+                label: 'Criar conta',
+                variant: NexaButtonVariant.outline,
+                onPressed: () {},
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: NexaButton(
+                  label: 'Continuar sem conta',
+                  variant: NexaButtonVariant.text,
+                  onPressed: () {},
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
