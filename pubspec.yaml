@@ -1,0 +1,54 @@
+name: fe_nexa_app
+description: "Nexa: compare o tempo de espera em unidades de saúde antes de sair de casa."
+# Impede publicar sem querer no pub.dev.
+publish_to: 'none'
+
+# Versão do app: major.minor.patch+número-do-build
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Desenha SVG: logo, poses do Guia e ícones.
+  flutter_svg: ^2.3.2
+
+  # Toca as animações .json (Lottie) do Guia.
+  lottie: ^3.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Regras recomendadas do analisador (ver analysis_options.yaml).
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Arquivos que o app carrega em tempo de execução.
+  # A barra no fim inclui todos os arquivos da pasta (não as subpastas).
+  # Atenção ao recuo: 2 espaços por nível, nunca tab.
+  assets:
+    - assets/guia/lottie/
+    - assets/guia/poses/
+    - assets/icons/
+    - assets/images/
+
+  # Fonte do Nexa (Figtree). Quem não declara `weight` fica com 400.
+  # Mudou algo aqui? Pare o app e rode de novo; hot reload não pega.
+  fonts:
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/Figtree-Regular.ttf
+        - asset: assets/fonts/Figtree-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Figtree-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Figtree-Bold.ttf
+          weight: 700
