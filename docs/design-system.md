@@ -90,17 +90,18 @@ Os valores que se repetem no Figma são 8, 12, 16, 20 e 24 (`NexaSpacing.xs` a `
 
 ## Tamanhos
 
-| Constante | Valor | Onde |
-| --- | --- | --- |
-| `buttonHeight` | 52 | Botões primário e contorno |
-| `textButtonHeight` | 48 | Botão de texto |
-| `inputHeight` | 52 | Campos de texto |
-| `bottomNavHeight` | 80 | Barra de navegação inferior |
+| Constante                       | Valor | Onde |
+|---------------------------------| --- | --- |
+| `buttonHeight`                  | 52 | Botões primário e contorno |
+| `textButtonHeight`              | 48 | Botão de texto |
+| `inputHeight`                   | 52 | Campos de texto |
+| `bottomNavHeight`               | 80 | Barra de navegação inferior |
 | `navPillWidth` x `navPillHeight` | 64 x 32 | Pílula do item ativo da navegação |
-| `minTouchTarget` | 44 | Menor área de toque aceitável |
-| `heartButton` | 48 | Botão de coração |
-| `logoMark` | 36 | Símbolo da logo |
-| `guia` | 220 | Guia nas telas |
+| `minTouchTarget`                | 44 | Menor área de toque aceitável |
+| `heartButton`                   | 48 | Botão de coração |
+| `logoMark`                      | 36 | Símbolo da logo |
+| `guia`                          | 220 | Guia nas telas |
+|`NexaRadius.snackbar`              | 12 | Avisos curtos |
 
 ## Sombra
 
