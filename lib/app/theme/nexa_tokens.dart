@@ -14,6 +14,9 @@ abstract final class NexaRadius {
 
   /// Diálogos.
   static const double dialog = 28;
+
+  /// Avisos curtos (snackbar).
+  static const double snackbar = 12;
 }
 
 /// Espaçamentos que se repetem no Figma: 8, 12, 16, 20 e 24.

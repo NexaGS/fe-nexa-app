@@ -5,9 +5,17 @@ import '../../app/theme/nexa_text.dart';
 import '../../shared/widgets/guia_view.dart';
 import '../../shared/widgets/nexa_button.dart';
 import '../../shared/widgets/nexa_logo.dart';
+import '../auth/criar_conta_page.dart';
+import '../auth/entrar_page.dart';
+import '../home/home_page.dart';
 
 class InicioPage extends StatelessWidget {
   const InicioPage({super.key});
+
+  /// Empilha uma tela nova por cima desta.
+  void _abrir(BuildContext context, Widget tela) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => tela));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,20 +53,20 @@ class InicioPage extends StatelessWidget {
               const SizedBox(height: 24),
               NexaButton(
                 label: 'Entrar',
-                onPressed: () {}, // abrir a tela Entrar
+                onPressed: () => _abrir(context, const EntrarPage()),
               ),
               const SizedBox(height: 12),
               NexaButton(
                 label: 'Criar conta',
                 variant: NexaButtonVariant.outline,
-                onPressed: () {}, // abrir a tela Criar conta
+                onPressed: () => _abrir(context, const CriarContaPage()),
               ),
               const SizedBox(height: 12),
               Center(
                 child: NexaButton(
                   label: 'Continuar sem conta',
                   variant: NexaButtonVariant.text,
-                  onPressed: () {}, // abrir a Lista
+                  onPressed: () => _abrir(context, const HomePage()),
                 ),
               ),
               Padding(
