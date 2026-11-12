@@ -31,7 +31,8 @@ lib/
 └── features/
     ├── inicio/              Início
     ├── auth/                Entrar, Criar conta
-    ├── unidades/            Lista, Unidade (detalhe), Busca
+    ├── unidades/            Lista, Unidade (detalhe)
+    ├── busca/               Buscar (campo, itens da lista de locais)
     ├── favoritas/           Favoritas
     └── perfil/              Perfil
 ```
