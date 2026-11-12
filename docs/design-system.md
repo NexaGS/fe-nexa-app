@@ -47,6 +47,8 @@ A espera de cada unidade tem sempre ponto colorido **e** texto (a cor nunca é o
 | Longa | "Espera longa" | `red` | `red` |
 | Sem dado | "Sem dados recentes" (ícone de ajuda) | — | `slate` |
 
+A faixa sai de `nivelDaEspera(minutos)` (`lib/shared/utils/espera.dart`): até 60 min é curta, de 60 a 180 min é média, acima de 180 min é longa; sem número é "sem dados". "Dados antigos" depende da hora da última atualização e só entra quando o Java devolver essa hora. O texto "Cerca de 40 min" sai de `textoDaEspera(minutos)`.
+
 ## Texto
 
 Fonte **Figtree**, pesos 400, 500, 600 e 700, embutida em `assets/fonts/`. O `height` do Flutter é um multiplicador: linha dividida pelo tamanho (34 / 28).
@@ -55,6 +57,7 @@ Fonte **Figtree**, pesos 400, 500, 600 e 700, embutida em `assets/fonts/`. O `he
 | --- | --- | --- | --- | --- |
 | `display` | 28 / 34 | 700 | tracking -0,56 | Título da tela Início |
 | `title` | 22 / 28 | 600 | | Títulos de tela e saudação |
+| `section` | 18 / 24 | 600 | | Títulos de bloco dentro da tela (Perfil) |
 | `waitBand` | 22 / 28 | 600 | tracking -0,22 | Faixa de espera nos cartões |
 | `bigNumber` | 44 / 48 | 700 | | Número grande do detalhe |
 | `body` | 16 / 24 | 400 | | Texto corrido |
@@ -80,7 +83,9 @@ Text('Veja quais unidades...', style: NexaText.body.copyWith(color: NexaColors.i
 | `NexaRadius.pill` | 999 | Botões, chips, pílula SAMU, selo |
 | `NexaRadius.card` | 20 | Cartões de unidade |
 | `NexaRadius.input` | 16 | Campos de texto |
-| `NexaRadius.dialog` | 28 | Diálogos |
+| `NexaRadius.dialog` | 28 | Diálogos e folhas que sobem do pé da tela (cantos de cima) |
+| `NexaRadius.banner` | 16 | Avisos fixos no alto da lista e blocos informativos cinza (legenda da folha) |
+| `NexaRadius.skeleton` | 8 | Blocos cinza do esqueleto de carregamento |
 
 O snackbar usa raio 12 (valor avulso do Figma; vira constante quando o componente for criado).
 
@@ -99,7 +104,9 @@ Os valores que se repetem no Figma são 8, 12, 16, 20 e 24 (`NexaSpacing.xs` a `
 | `navPillWidth` x `navPillHeight` | 64 x 32 | Pílula do item ativo da navegação |
 | `minTouchTarget`                | 44 | Menor área de toque aceitável |
 | `heartButton`                   | 48 | Botão de coração |
+| `iconButton`                    | 48 | Botão só de ícone dentro de outro componente (limpar a busca) |
 | `logoMark`                      | 36 | Símbolo da logo |
+| `avatar`                        | 72 | Círculo com as iniciais (Perfil) |
 | `guia`                          | 220 | Guia nas telas |
 |`NexaRadius.snackbar`              | 12 | Avisos curtos |
 
