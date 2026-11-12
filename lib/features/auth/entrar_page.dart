@@ -41,12 +41,17 @@ class _EntrarPageState extends State<EntrarPage> {
       return;
     }
 
+
+
     setState(() => _carregando = true);
     try {
-      await authRepository.entrar(email: _email.text, senha: _senha.text);
+      final sessao = await authRepository.entrar(
+        email: _email.text,
+        senha: _senha.text,
+      );
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => HomePage(nome: sessao.nome)),
         (rota) => false,
       );
     } on CredenciaisInvalidas {
