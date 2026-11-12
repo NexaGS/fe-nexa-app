@@ -8,10 +8,11 @@ import 'package:http/http.dart' as http;
 /// Quem entrou no app. O [token] é a "chave" que o Spring devolve e que será
 /// enviada nas próximas chamadas que exigirem login.
 class Sessao {
-  const Sessao({required this.email, required this.token});
+  const Sessao({required this.email, required this.token, this.nome});
 
   final String email;
   final String token;
+  final String? nome;
 }
 
 /// Erros que as telas sabem explicar para a pessoa.
@@ -133,8 +134,10 @@ class AuthRepositoryHttp implements AuthRepository {
   Sessao _lerSessao(http.Response resposta, String email) {
     try {
       final json =
-          jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>;
-      return Sessao(email: email, token: json['token'] as String);
+      jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>;
+      final token = json['token'] as String;
+      final nome = _dadosDoToken(token)?['nome'] as String?;
+      return Sessao(email: email, token: token, nome: nome);
     } on FormatException {
       throw const ErroInesperado();
     } on TypeError {
@@ -143,22 +146,24 @@ class AuthRepositoryHttp implements AuthRepository {
   }
 
   /// O token JWT tem 3 partes separadas por ponto: cabeçalho.dados.assinatura.
-  /// A parte do meio é um JSON em base64 com o "role" (USUARIO ou COLABORADOR).
-  /// Aqui só LEMOS o papel para decidir qual tela mostrar. Quem confere a
-  /// assinatura e dá permissão de verdade é o Spring.
-  String? _papelDoToken(String token) {
+  /// A parte do meio é um JSON em base64 com o "role" e o "nome". Aqui só
+  /// LEMOS esses dados, para escolher a tela e dar boas-vindas. Quem confere
+  /// a assinatura e dá permissão de verdade é o Spring.
+  Map<String, dynamic>? _dadosDoToken(String token) {
     try {
       final partes = token.split('.');
       if (partes.length != 3) return null;
       // "normalize" completa os "=" do final que o base64 do JWT dispensa.
       final miolo = base64Url.normalize(partes[1]);
       final dados = utf8.decode(base64Url.decode(miolo));
-      final json = jsonDecode(dados) as Map<String, dynamic>;
-      return json['role'] as String?;
+      return jsonDecode(dados) as Map<String, dynamic>;
     } catch (_) {
       return null;
     }
   }
+
+  String? _papelDoToken(String token) =>
+      _dadosDoToken(token)?['role'] as String?;
 }
 
 /// A instância que as telas usam. Para testar sem rede, troque aqui por uma

@@ -1,6 +1,7 @@
 import 'package:fe_nexa_app/app/theme/nexa_colors.dart';
 import 'package:fe_nexa_app/app/theme/nexa_text.dart';
 import 'package:flutter/material.dart';
+import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 
 enum NexaButtonVariant { primary, outline, text, link }
 
@@ -12,6 +13,7 @@ class NexaButton extends StatelessWidget {
     this.variant = NexaButtonVariant.primary,
     this.carregando = false,
     this.labelCarregando,
+    this.iconName,
   });
 
   final String label;
@@ -24,14 +26,26 @@ class NexaButton extends StatelessWidget {
   /// Texto durante o carregamento (por exemplo, "Entrando…").
   /// Se for nulo, continua mostrando o [label].
   final String? labelCarregando;
+  final String? iconName;
 
   @override
   Widget build(BuildContext context) {
     // Travar o botão enquanto carrega evita o toque duplo.
     final VoidCallback? acao = carregando ? null : onPressed;
+    final nomeDoIcone = iconName;
+    final Widget rotulo = nomeDoIcone == null
+        ? Text(label)
+        : Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NexaIcon(nomeDoIcone, size: 20),
+        const SizedBox(width: 8),
+        Text(label),
+      ],
+    );
     final Widget conteudo = carregando
         ? _Carregando(texto: labelCarregando ?? label)
-        : Text(label);
+        : rotulo;
 
     return switch (variant) {
       NexaButtonVariant.primary => FilledButton(

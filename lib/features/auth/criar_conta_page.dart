@@ -57,7 +57,7 @@ class _CriarContaPageState extends State<CriarContaPage> {
 
     setState(() => _carregando = true);
     try {
-      await authRepository.registrar(
+      final sessao = await authRepository.registrar(
         nome: _nome.text,
         email: _email.text,
         senha: _senha.text,
@@ -68,7 +68,7 @@ class _CriarContaPageState extends State<CriarContaPage> {
       await _mostrarContaCriada();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => HomePage(nome: sessao.nome)),
         (rota) => false,
       );
     } on EmailJaCadastrado {
