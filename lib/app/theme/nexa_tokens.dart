@@ -12,11 +12,18 @@ abstract final class NexaRadius {
   /// Campos de texto.
   static const double input = 16;
 
-  /// Diálogos.
+  /// Diálogos e folhas que sobem do pé da tela (cantos de cima).
   static const double dialog = 28;
 
   /// Avisos curtos (snackbar).
   static const double snackbar = 12;
+
+  /// Avisos fixos no alto da lista (banner) e blocos informativos de fundo
+  /// cinza, como a legenda da folha "Como calculamos a espera".
+  static const double banner = 16;
+
+  /// Blocos cinza do esqueleto de carregamento.
+  static const double skeleton = 8;
 }
 
 /// Espaçamentos que se repetem no Figma: 8, 12, 16, 20 e 24.
@@ -55,8 +62,14 @@ abstract final class NexaSizes {
   /// Botão de coração (favoritar).
   static const double heartButton = 48;
 
+  /// Botão só de ícone que fica dentro de outro componente (limpar a busca).
+  static const double iconButton = 48;
+
   /// Símbolo da logo.
   static const double logoMark = 36;
+
+  /// Círculo do avatar (iniciais do nome, no Perfil).
+  static const double avatar = 72;
 
   /// Tamanho padrão do Guia nas telas.
   static const double guia = 220;

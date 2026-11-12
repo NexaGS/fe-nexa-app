@@ -31,6 +31,15 @@ abstract final class NexaText {
     color: NexaColors.ink,
   );
 
+  /// Título de bloco dentro de uma tela (Perfil: "Minha busca"). 18/24, SemiBold.
+  static const section = TextStyle(
+    fontFamily: _family,
+    fontSize: 18,
+    height: 24 / 18,
+    fontWeight: FontWeight.w600,
+    color: NexaColors.ink,
+  );
+
   /// Faixa de tempo de espera nos cartões. 22/28, SemiBold, tracking -0,22.
   static const waitBand = TextStyle(
     fontFamily: _family,
