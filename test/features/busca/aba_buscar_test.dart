@@ -13,9 +13,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// --- Versões falsas das dependências: a tela roda sem o Java e sem guardar
-// nada de verdade. ---
-
 /// 25 unidades: as ímpares são de São Paulo e as pares, do Rio de Janeiro.
 /// Com 10 por página, são 3 páginas (10, 10 e 5).
 UnidadeResumo _unidade(int n) => UnidadeResumo(
@@ -34,9 +31,6 @@ typedef _Pedido = ({String? nome, String? uf, int pagina});
 
 /// Um Java de mentira com [_todas]: filtra por nome e UF, ordena (já estão em
 /// ordem) e pagina de verdade.
-///
-/// [falhas] diz o que acontece em cada chamada, na ordem: `null` = responde
-/// normal; uma exceção = lança. Passado o fim da lista, responde normal.
 class _CatalogoFalso implements CatalogoRepository {
   _CatalogoFalso({this.falhas = const []});
 
@@ -146,7 +140,6 @@ Future<void> abrirBusca(
                 catalogo: catalogo ?? _CatalogoFalso(),
                 favoritas: favoritas ?? _FavoritasFalso(),
                 tamanhoDaPagina: 10,
-                // Curto para o teste não esperar à toa.
                 atrasoDaDigitacao: const Duration(milliseconds: 50),
               ),
             ),
@@ -188,7 +181,6 @@ void main() {
     expect(find.text('Estado: Todos'), findsOneWidget);
     expect(find.text('25 unidades · em ordem alfabética'), findsOneWidget);
 
-    // Pediu só a primeira página, sem nenhum filtro.
     expect(catalogo.pedidos, [(nome: '', uf: '', pagina: 0)]);
   });
 
@@ -234,7 +226,6 @@ void main() {
     await rolarAte(tester, find.text('Unidade 25'));
     await tester.pumpAndSettle();
 
-    // Páginas 0, 1 e 2, cada uma uma vez só.
     expect(catalogo.pedidos.map((p) => p.pagina).toList(), [0, 1, 2]);
     expect(find.text('Unidade 25'), findsOneWidget);
   });
@@ -256,7 +247,6 @@ void main() {
 
     expect(find.text('Estado: SP'), findsOneWidget);
     expect(catalogo.pedidos.last, (nome: '', uf: 'SP', pagina: 0));
-    // Só as de São Paulo (as 13 ímpares).
     expect(find.text('13 unidades · em ordem alfabética'), findsOneWidget);
     expect(find.text('Unidade 02'), findsNothing);
   });
@@ -302,7 +292,6 @@ void main() {
     await digitar(tester, 'Unidade 2');
 
     expect(catalogo.pedidos.last, (nome: 'Unidade 2', uf: '', pagina: 0));
-    // Unidade 20 a 25.
     expect(find.text('6 unidades · em ordem alfabética'), findsOneWidget);
   });
 
@@ -339,7 +328,6 @@ void main() {
 
     expect(find.text('Nenhuma unidade encontrada'), findsNothing);
     expect(find.text('25 unidades · em ordem alfabética'), findsOneWidget);
-    // O campo também foi esvaziado.
     final campo = tester.widget<TextField>(find.byType(TextField));
     expect(campo.controller?.text, isEmpty);
   });
@@ -347,11 +335,11 @@ void main() {
   testWidgets('a resposta de uma busca velha é descartada', (tester) async {
     final catalogo = _CatalogoManual();
     await abrirBusca(tester, catalogo: catalogo, esperar: false);
-    expect(catalogo.respostas, hasLength(1)); // a busca inicial, ainda pendente
+    expect(catalogo.respostas, hasLength(1));
 
     await tester.enterText(find.byType(TextField), 'Unidade 20');
     await tester.pump(const Duration(milliseconds: 100));
-    expect(catalogo.respostas, hasLength(2)); // a busca nova
+    expect(catalogo.respostas, hasLength(2));
 
     // A nova chega primeiro; a velha chega depois e não pode sobrescrevê-la.
     catalogo.respostas[1].complete(_paginaCom([_unidade(20)]));
@@ -403,7 +391,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Não deu para carregar mais unidades.'), findsOneWidget);
-      // A lista de cima continua lá.
       expect(find.byType(NexaUnidadeCard), findsWidgets);
 
       await tester.tap(find.text('Tentar de novo'));

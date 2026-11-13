@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 
 /// Linha de configuração com chave liga/desliga: título, texto de apoio e o
 /// interruptor à direita ("Usar minha localização").
-///
-/// Não guarda o estado: [ativa] vem de fora e [aoAlterar] avisa a mudança.
 class NexaLinhaConfig extends StatelessWidget {
   const NexaLinhaConfig({
     super.key,
@@ -29,8 +27,6 @@ class NexaLinhaConfig extends StatelessWidget {
   Widget build(BuildContext context) {
     final apoio = descricao;
 
-    // MergeSemantics junta título, apoio e chave em um item só para o leitor
-    // de tela: "Usar minha localização, ligado".
     return MergeSemantics(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +63,6 @@ class NexaLinhaConfig extends StatelessWidget {
                   ? NexaColors.ink
                   : NexaColors.outline,
             ),
-            // O "visto" dentro da bolinha só aparece com a chave ligada.
             thumbIcon: WidgetStateProperty.resolveWith<Icon?>(
               (estados) => estados.contains(WidgetState.selected)
                   ? const Icon(Icons.check, size: 16, color: NexaColors.white)

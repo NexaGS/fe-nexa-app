@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 
 /// A casca do app depois do login: o conteúdo de cada aba e a barra de baixo.
 /// Quem entra com conta e quem segue como visitante chegam aqui.
-///
-/// Só as abas Home e Buscar têm conteúdo por enquanto; as outras são provisórias.
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.nome});
 
@@ -37,7 +35,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       body: SafeArea(
-        bottom: false, // a barra de baixo já cuida da área de gestos
+        bottom: false,
         child: IndexedStack(index: _aba, children: abas),
       ),
       bottomNavigationBar: NexaBottomNav(

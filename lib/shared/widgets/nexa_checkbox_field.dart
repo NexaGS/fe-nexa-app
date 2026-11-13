@@ -5,10 +5,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Caixinha de marcar com um texto ao lado, que funciona dentro de um `Form`.
-///
-/// É um `FormField<bool>`: o `validator` roda junto com o dos outros campos
-/// quando o formulário chama `validate()`, e a mensagem de erro aparece
-/// embaixo, no mesmo estilo dos campos de texto.
 class NexaCheckboxField extends FormField<bool> {
   NexaCheckboxField({
     super.key,

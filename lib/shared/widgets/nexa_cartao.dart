@@ -4,13 +4,6 @@ import 'package:flutter/material.dart';
 
 /// A "casca" de todo cartão do Nexa: fundo branco, borda fina, cantos de 20 px
 /// e sombra leve. O miolo é o [child]; a margem de dentro é de quem usa.
-///
-/// Com [aoTocar], o cartão inteiro vira um botão (com o efeito de toque
-/// seguindo o canto arredondado e anunciado como botão pelo leitor de tela).
-/// Sem [aoTocar], é só uma moldura.
-///
-/// Se dentro do cartão houver outro botão (o coração de favoritar), tudo bem:
-/// o toque vai para o botão de dentro, e o leitor de tela anuncia os dois.
 class NexaCartao extends StatelessWidget {
   const NexaCartao({super.key, required this.child, this.aoTocar});
 
@@ -38,7 +31,6 @@ class NexaCartao extends StatelessWidget {
               child: Material(
                 color: Colors.transparent,
                 borderRadius: raio,
-                // Corta o efeito de toque no canto arredondado.
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(onTap: acao, borderRadius: raio, child: child),
               ),

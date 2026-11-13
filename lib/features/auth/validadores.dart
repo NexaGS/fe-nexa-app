@@ -2,7 +2,7 @@
 
 abstract final class Validadores {
   static const senhaMinima = 8;
-  static const senhaMaxima = 72; //
+  static const senhaMaxima = 72;
 
   static final _formatoEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 

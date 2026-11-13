@@ -186,7 +186,6 @@ void main() {
             ),
           ],
         ),
-        // Só para a galeria mostrar os botões do app ao lado dos componentes.
         GaleriaSecao(
           titulo: 'Referência: NexaButton',
           children: [

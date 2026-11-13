@@ -32,8 +32,8 @@ void main() {
     );
 
     await tester.tap(find.text('abrir'));
-    await tester.pump(); // começa a animação de entrada
-    await tester.pump(const Duration(milliseconds: 750)); // termina
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 750));
 
     expect(find.text('Unidade removida das favoritas'), findsOneWidget);
     await tester.tap(find.text('Desfazer'));

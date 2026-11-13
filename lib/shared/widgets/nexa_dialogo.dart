@@ -6,22 +6,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Abre o [NexaDialogo] e devolve o que a pessoa escolheu.
-///
-/// Devolve `true` quando ela confirma e `false` quando cancela, toca fora do
-/// diálogo ou usa o gesto de voltar. Assim, quem chama só precisa de um `if`,
-/// sem tratar `null`.
-///
-/// ```dart
-/// final querSair = await mostrarNexaDialogo(
-///   context,
-///   titulo: 'Sair da conta?',
-///   texto: 'Suas favoritas continuam guardadas na sua conta.',
-///   rotuloConfirmar: 'Sair',
-///   rotuloCancelar: 'Cancelar',
-///   destrutivo: true,
-/// );
-/// if (querSair && context.mounted) { /* sair */ }
-/// ```
 Future<bool> mostrarNexaDialogo(
   BuildContext context, {
   required String titulo,
@@ -49,15 +33,6 @@ Future<bool> mostrarNexaDialogo(
 }
 
 /// Diálogo de pergunta com duas saídas: confirmar ou cancelar.
-///
-/// Há dois jeitos, como no Figma:
-/// - **Padrão** ("Sintomas graves?"): os botões ficam um embaixo do outro,
-///   com a ação principal em verde-lima e a recusa como botão de texto.
-/// - **Destrutivo** ("Sair da conta?"): os botões ficam lado a lado, à
-///   direita, e a ação que tira algo da pessoa fica em vermelho.
-///
-/// O próprio diálogo se fecha ao tocar em um botão, devolvendo `true`
-/// (confirmar) ou `false` (cancelar). Prefira abrir com [mostrarNexaDialogo].
 class NexaDialogo extends StatelessWidget {
   const NexaDialogo({
     super.key,
@@ -97,8 +72,6 @@ class NexaDialogo extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(NexaRadius.dialog),
       ),
-      // `namesRoute` faz o leitor de tela anunciar o título ao abrir, e
-      // `scopesRoute` mantém o foco dele dentro do diálogo.
       child: Semantics(
         scopesRoute: true,
         namesRoute: true,
@@ -191,9 +164,6 @@ class _AcoesEmpilhadas extends StatelessWidget {
 }
 
 /// Jeito destrutivo: cancelar e confirmar lado a lado, à direita.
-///
-/// Usa `Wrap` (e não `Row`) para que, com letra grande ou tela estreita, o
-/// segundo botão desça para a linha de baixo em vez de estourar a largura.
 class _AcoesLadoALado extends StatelessWidget {
   const _AcoesLadoALado({
     required this.rotuloConfirmar,

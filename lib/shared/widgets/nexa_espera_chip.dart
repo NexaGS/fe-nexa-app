@@ -5,9 +5,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// O selo que diz como está a espera: ponto colorido (ou ícone) e texto.
-///
-/// A cor nunca é o único sinal: toda faixa tem texto ("Espera curta"), para
-/// quem não enxerga a diferença entre verde e vermelho.
 class NexaEsperaChip extends StatelessWidget {
   const NexaEsperaChip({super.key, required this.nivel});
 

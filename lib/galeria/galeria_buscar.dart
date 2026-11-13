@@ -13,13 +13,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Galeria da aba Buscar: cada estado do Figma, sem precisar do Java.
-///
-/// Rode com: `flutter run -t lib/galeria/galeria_buscar.dart`
-///
-/// Os botões do alto escolhem o cenário. O "Java" de mentira tem 23 unidades
-/// em 4 estados, filtra por nome e por estado e pagina de verdade (10 por
-/// vez, três páginas), com 700 ms de demora para dar tempo de ver o
-/// "carregando".
 void main() => runApp(const _GaleriaBuscar());
 
 enum _Cenario {
@@ -238,13 +231,6 @@ const _unidades = [
 
 /// Um Java de mentira: filtra por nome (em qualquer parte, sem ligar para
 /// maiúsculas) e por estado, e pagina de verdade.
-///
-/// O que acontece em cada cenário:
-/// - [_Cenario.carregando]: nunca responde;
-/// - [_Cenario.erroDoServidor]: falha na 1ª vez e dá certo no "Tentar de novo";
-/// - [_Cenario.semInternet]: sempre falha;
-/// - [_Cenario.falhaAoCarregarMais]: a 1ª página vem; a 2ª falha uma vez;
-/// - [_Cenario.catalogoVazio]: não há unidade nenhuma.
 class _CatalogoDoCenario implements CatalogoRepository {
   _CatalogoDoCenario(this.cenario);
 
@@ -264,7 +250,7 @@ class _CatalogoDoCenario implements CatalogoRepository {
 
     switch (cenario) {
       case _Cenario.carregando:
-        return Completer<PaginaDeUnidades>().future; // nunca chega
+        return Completer<PaginaDeUnidades>().future;
       case _Cenario.erroDoServidor:
         if (_chamadas == 1) throw const ErroInesperado();
       case _Cenario.semInternet:
@@ -334,8 +320,6 @@ class _GaleriaBuscar extends StatefulWidget {
 class _GaleriaBuscarState extends State<_GaleriaBuscar> {
   _Cenario _cenario = _Cenario.catalogo;
 
-  // Criados ao escolher o cenário (e não no `build`), para os contadores de
-  // chamadas não zerarem a cada redesenho.
   late CatalogoRepository _catalogo = _CatalogoDoCenario(_cenario);
   late FavoritasRepository _favoritas = _FavoritasNaMemoria();
 
@@ -377,7 +361,6 @@ class _GaleriaBuscarState extends State<_GaleriaBuscar> {
               ),
               Expanded(
                 child: AbaBuscar(
-                  // A chave nova recria a tela do zero a cada cenário.
                   key: ValueKey(_cenario),
                   catalogo: _catalogo,
                   favoritas: _favoritas,

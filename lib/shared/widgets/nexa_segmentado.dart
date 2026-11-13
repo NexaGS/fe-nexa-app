@@ -5,9 +5,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Escolha de uma opção entre poucas, lado a lado ("3", "5", "10").
-///
-/// A opção escolhida ganha fundo claro e um "visto". Trabalha com posições
-/// (0, 1, 2...), e a tela converte para o valor que quiser.
 class NexaSegmentado extends StatelessWidget {
   const NexaSegmentado({
     super.key,
@@ -28,7 +25,6 @@ class NexaSegmentado extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Corta o fundo das pontas para acompanhar a borda arredondada.
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: NexaColors.white,
@@ -75,7 +71,6 @@ class _Segmento extends StatelessWidget {
         child: InkWell(
           onTap: aoTocar,
           child: Container(
-            // 44 px é o mínimo de toque do app (o Figma desenha 40).
             height: NexaSizes.minTouchTarget,
             alignment: Alignment.center,
             decoration: BoxDecoration(

@@ -14,9 +14,6 @@ import 'package:fe_nexa_app/features/unidades/nexa_unidade_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// --- Versões falsas das dependências: a tela roda sem GPS, sem Java e sem
-// guardar nada de verdade. ---
-
 class _GpsFalso implements LocalizacaoService {
   _GpsFalso({this.erro});
 
@@ -195,7 +192,7 @@ void main() {
     expect(alturaB, lessThan(alturaC));
 
     expect(find.text('Cerca de 40 min'), findsOneWidget);
-    expect(find.text('Vila Nova'), findsOneWidget); // bairro, linha de baixo
+    expect(find.text('Vila Nova'), findsOneWidget);
   });
 
   testWidgets('o selo de menor espera vai no cartão da menor espera, onde ele estiver', (
@@ -236,7 +233,7 @@ void main() {
   testWidgets('com uma só unidade, não mostra o selo de menor espera', (
     tester,
   ) async {
-    await abrirHome(tester); // padrão: só a Unidade B
+    await abrirHome(tester);
 
     expect(find.text('Unidade B'), findsOneWidget);
     expect(find.text('Menor espera perto de você'), findsNothing);

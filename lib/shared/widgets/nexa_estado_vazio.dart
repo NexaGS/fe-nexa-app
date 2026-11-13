@@ -5,10 +5,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_button.dart';
 import 'package:flutter/material.dart';
 
 /// Tela de "nada para mostrar": o Guia, um título, um texto e um botão.
-///
-/// Serve para erro do servidor, nenhuma unidade perto, local não encontrado e
-/// favoritas vazias. O componente só empilha as peças; quem põe margem e
-/// centraliza na tela é a própria tela.
 class NexaEstadoVazio extends StatelessWidget {
   const NexaEstadoVazio({
     super.key,

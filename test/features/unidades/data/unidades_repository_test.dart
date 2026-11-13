@@ -63,7 +63,7 @@ void main() {
       'tamanho': '5',
     });
     expect(unidades, hasLength(1));
-    expect(unidades.single.nome, 'UBS Vila Olímpia'); // acento preservado
+    expect(unidades.single.nome, 'UBS Vila Olímpia');
     expect(unidades.single.tempoEspera, 20.0);
   });
 

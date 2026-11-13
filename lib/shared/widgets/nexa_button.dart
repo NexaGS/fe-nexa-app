@@ -30,7 +30,6 @@ class NexaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Travar o botão enquanto carrega evita o toque duplo.
     final VoidCallback? acao = carregando ? null : onPressed;
     final nomeDoIcone = iconName;
     final Widget rotulo = nomeDoIcone == null
@@ -40,8 +39,6 @@ class NexaButton extends StatelessWidget {
       children: [
         NexaIcon(nomeDoIcone, size: 20),
         const SizedBox(width: 8),
-        // `Flexible` + reticências: em botão estreito (dois lado a lado) o
-        // texto encolhe em vez de estourar a largura.
         Flexible(
           child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
         ),
@@ -57,7 +54,6 @@ class NexaButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: NexaColors.lime,
           foregroundColor: NexaColors.ink,
-          // Carregando não é "desabilitado": o botão continua verde-lima.
           disabledBackgroundColor: carregando ? NexaColors.lime : null,
           disabledForegroundColor: carregando ? NexaColors.ink : null,
           minimumSize: const Size.fromHeight(52),

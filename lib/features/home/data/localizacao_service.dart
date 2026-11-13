@@ -53,7 +53,6 @@ class LocalizacaoServiceGeolocator implements LocalizacaoService {
     if (permissao == LocationPermission.denied) {
       permissao = await Geolocator.requestPermission();
     }
-    // Depois de pedir, o resultado pode vir "deniedForever" direto.
     if (permissao == LocationPermission.deniedForever) {
       throw const PermissaoNegadaParaSempre();
     }

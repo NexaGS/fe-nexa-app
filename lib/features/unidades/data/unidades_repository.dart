@@ -13,9 +13,6 @@ abstract interface class UnidadesRepository {
   /// As [tamanho] unidades mais próximas de um ponto, sem limite de distância,
   /// na ordem em que o Java devolve (primeiro a distância, depois a espera).
   /// [tamanho] é a escolha da pessoa no Perfil: 3, 5 ou 10.
-  ///
-  /// Lança [SemConexao] se não deu para falar com o servidor e
-  /// [ErroInesperado] para qualquer outra resposta que o app não esperava.
   Future<List<UnidadeResumo>> proximas({
     required double latitude,
     required double longitude,
@@ -25,8 +22,6 @@ abstract interface class UnidadesRepository {
 
 /// `GET /api/unidades/proximas?latitude=&longitude=&pagina=&tamanho=`
 /// -> 200 com `PageResponse<UnidadeSaudeResponse>` (a lista vem em `conteudo`).
-///
-/// A rota é pública: não precisa de token.
 class UnidadesRepositoryHttp implements UnidadesRepository {
   /// Em teste, passe um `MockClient` (de `package:http/testing.dart`) em
   /// [cliente] para não depender da rede.

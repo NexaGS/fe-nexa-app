@@ -2,13 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fe_nexa_app/app/theme/nexa_colors.dart';
 
 /// Estilos de texto do Nexa (fonte Figtree), copiados do Figma.
-///
-/// No Flutter, `height` é um multiplicador do tamanho da fonte. Uma linha de
-/// 34 px com fonte de 28 px vira `height: 34 / 28`.
-///
-/// Todos os estilos usam a cor de texto principal. Para outra cor, use
-/// `copyWith`, por exemplo:
-/// `NexaText.body.copyWith(color: NexaColors.inkSoft)`.
 abstract final class NexaText {
   static const _family = 'Figtree';
 

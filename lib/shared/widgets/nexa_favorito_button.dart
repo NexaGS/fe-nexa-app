@@ -4,9 +4,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Botão de coração: liga e desliga a favorita de uma unidade.
-///
-/// Não guarda nada: quem decide o que fazer ao tocar é [aoAlternar]. A área
-/// de toque tem 48 px, mais que o mínimo de 44 px do app.
 class NexaFavoritoButton extends StatelessWidget {
   const NexaFavoritoButton({
     super.key,

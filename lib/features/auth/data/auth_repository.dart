@@ -40,7 +40,7 @@ class ErroInesperado implements Exception {
 }
 
 /// O contrato: o que as telas precisam, sem saber como a conversa com o
-/// servidor acontece. (É o `interface` do TypeScript.)
+/// servidor acontece.
 abstract interface class AuthRepository {
   Future<Sessao> entrar({required String email, required String senha});
 
@@ -54,9 +54,6 @@ abstract interface class AuthRepository {
 }
 
 /// Conversa de verdade com o Spring.
-///
-/// - `POST /api/auth/login`    -> 200 com o token, ou 401 se não confere
-/// - `POST /api/auth/registro` -> 201 com o token, ou 409 se o e-mail já existe
 class AuthRepositoryHttp implements AuthRepository {
   AuthRepositoryHttp({required this.baseUrl});
 

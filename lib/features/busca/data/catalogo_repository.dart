@@ -33,12 +33,6 @@ class PaginaDeUnidades {
 /// O contrato: a Busca pede o catálogo de unidades sem saber como o Java responde.
 abstract interface class CatalogoRepository {
   /// Uma página das unidades cadastradas, em ordem alfabética pelo nome.
-  ///
-  /// [nome] filtra por trecho do nome (sem distinguir maiúsculas) e [uf] pela
-  /// sigla do estado. Texto vazio ou em branco quer dizer "sem filtro".
-  ///
-  /// Lança [SemConexao] se não deu para falar com o servidor e
-  /// [ErroInesperado] para qualquer outra resposta que o app não esperava.
   Future<PaginaDeUnidades> pagina({
     String? nome,
     String? uf,
@@ -49,8 +43,6 @@ abstract interface class CatalogoRepository {
 
 /// `GET /api/unidades?nome=&uf=&pagina=&tamanho=`
 /// -> 200 com `PageResponse<UnidadeSaudeResponse>`.
-///
-/// A rota é pública: não precisa de token.
 class CatalogoRepositoryHttp implements CatalogoRepository {
   /// Em teste, passe um `MockClient` (de `package:http/testing.dart`) em
   /// [cliente] para não depender da rede.
@@ -73,7 +65,6 @@ class CatalogoRepositoryHttp implements CatalogoRepository {
       queryParameters: {
         'pagina': pagina.toString(),
         'tamanho': tamanho.toString(),
-        // Só manda o filtro quando há o que filtrar: "sem filtro" é não mandar.
         if (termo != null && termo.isNotEmpty) 'nome': termo,
         if (sigla != null && sigla.isNotEmpty) 'uf': sigla,
       },

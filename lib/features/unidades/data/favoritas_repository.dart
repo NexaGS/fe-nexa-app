@@ -7,14 +7,10 @@ class FavoritaNaoSalva implements Exception {
 }
 
 /// O contrato: as telas favoritam sem saber onde isso fica guardado.
-///
-/// Hoje as favoritas ficam só no aparelho, para quem tem conta e para
-/// visitante. Quando o Java tiver as favoritas da conta (backlog), entra uma
-/// segunda implementação e nenhuma tela muda.
 abstract interface class FavoritasRepository {
   /// Os `id`s das unidades favoritas. Muda sempre que alguém favorita ou
-  /// desfavorita, em qualquer tela. As telas escutam este valor (como o
-  /// `useState` compartilhado do React) e se redesenham sozinhas.
+  /// desfavorita, em qualquer tela. As telas escutam este valor e se
+  /// redesenham sozinhas.
   ValueListenable<Set<int>> get ids;
 
   /// Lê o que está guardado no aparelho. Chame uma vez, ao abrir a tela.
@@ -26,8 +22,7 @@ abstract interface class FavoritasRepository {
   Future<void> definir(int id, {required bool favorita});
 }
 
-/// Guarda os `id`s em `SharedPreferences` (o "localStorage" do Android/iOS),
-/// como uma lista de textos: `["12", "40"]`.
+/// Guarda os `id`s em `SharedPreferences` como uma lista de textos: `["12", "40"]`.
 class FavoritasRepositoryLocal implements FavoritasRepository {
   static const _chave = 'favoritas_unidades';
 
@@ -40,7 +35,6 @@ class FavoritasRepositoryLocal implements FavoritasRepository {
   Future<void> carregar() async {
     final prefs = await SharedPreferences.getInstance();
     final guardados = prefs.getStringList(_chave) ?? const <String>[];
-    // `tryParse` devolve nulo para lixo; `whereType<int>` descarta esses nulos.
     _ids.value = guardados.map(int.tryParse).whereType<int>().toSet();
   }
 
@@ -58,7 +52,6 @@ class FavoritasRepositoryLocal implements FavoritasRepository {
       );
       if (!gravou) throw const FavoritaNaoSalva();
     } catch (_) {
-      // Desfaz só esta unidade, sem apagar o que mudou enquanto isso.
       _ids.value = _comMudanca(_ids.value, id, !favorita);
       throw const FavoritaNaoSalva();
     }

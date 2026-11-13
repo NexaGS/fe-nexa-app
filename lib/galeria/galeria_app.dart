@@ -4,11 +4,6 @@ import 'package:fe_nexa_app/app/theme/nexa_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Moldura das galerias de componentes.
-///
-/// Cada galeria tem o seu ponto de entrada (`lib/galeria/galeria_*.dart`) e se
-/// abre com `flutter run -t lib/galeria/galeria_base.dart`. Ela fica fora do
-/// app de verdade: não usa rotas, nem Java, só dados fixos. Serve para
-/// conferir cada componente em cada estado do Figma.
 class GaleriaApp extends StatelessWidget {
   const GaleriaApp({super.key, required this.titulo, required this.secoes});
 

@@ -33,14 +33,6 @@ Future<void> abrirDetalheDaUnidade(
 
 /// Detalhe de uma unidade: espera estimada, endereço, distância, "Ao chegar" e
 /// os botões "Como chegar" e "Compartilhar".
-///
-/// Tudo vem do [UnidadeResumo] que o cartão já tinha: não há chamada extra ao
-/// Java. O que o Java ainda não manda não aparece, e a tela nunca inventa dado:
-/// faixa mínima e máxima da espera, "atualizado há", pessoas aguardando e
-/// telefone.
-///
-/// Os parâmetros opcionais existem para os testes e a galeria passarem versões
-/// falsas; sem passar nada, a tela usa as reais.
 class UnidadeDetalhePage extends StatefulWidget {
   const UnidadeDetalhePage({
     super.key,

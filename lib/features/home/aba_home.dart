@@ -29,24 +29,6 @@ enum _Falha { servidor, semConexao }
 const double _espacoEntreCartoes = 14;
 
 /// Aba Home: saudação, local atual e a lista das unidades mais próximas.
-///
-/// O local vem sempre do GPS: não há "Alterar". Quem quer ver unidades de outro
-/// lugar vai à aba Buscar, que lista todas, de todos os estados.
-///
-/// O fluxo, em ordem:
-/// 1. pega a posição do GPS ([LocalizacaoService]);
-/// 2. com ela, pede juntos o nome do local ([LocalRepository]) e as unidades
-///    próximas ([UnidadesRepository]), porque um não depende do outro;
-/// 3. mostra a lista na ordem que o Java devolve: da unidade mais perto para a
-///    mais longe, sem limite de distância. O app não reordena por espera,
-///    porque de nada adianta uma fila curta longe demais; o selo "Menor espera"
-///    só destaca, entre as próximas, a de fila mais curta.
-///
-/// Os estados do Figma que esta tela cobre: carregando, lista, erro do
-/// servidor, nenhuma unidade perto, e sem internet com os últimos dados. Há
-/// ainda dois que o Figma não tem: sem internet e sem dados guardados, e sem GPS.
-/// Os repositórios são opcionais no construtor: sem passar nada, a tela usa os
-/// reais; os testes e a galeria passam versões falsas.
 class AbaHome extends StatefulWidget {
   const AbaHome({
     super.key,
@@ -79,7 +61,6 @@ class AbaHome extends StatefulWidget {
 }
 
 class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
-  // As dependências: as que a tela recebeu ou, se não recebeu, as reais.
   LocalizacaoService get _repoGps => widget.localizacao ?? localizacaoService;
   LocalRepository get _repoLocais => widget.locais ?? localRepository;
   UnidadesRepository get _repoUnidades => widget.unidades ?? unidadesRepository;
@@ -87,18 +68,15 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
       widget.favoritas ?? favoritasRepository;
   DateTime _agora() => (widget.agora ?? DateTime.now)();
 
-  // --- Local (a linha com o pin) ---
   bool _buscandoLocal = true;
-  String? _local; // "Bela Vista, São Paulo"
+  String? _local;
   Posicao? _posicao;
   bool _semPosicao = false;
 
-  // Quando algo falha, no lugar do local aparece um aviso e um link de ação.
   String? _aviso;
   String _rotuloAviso = 'Tentar de novo';
-  VoidCallback? _acaoDoAviso; // se nulo, a ação é tentar de novo
+  VoidCallback? _acaoDoAviso;
 
-  // --- Unidades ---
   // Nulo = ainda não chegou lista nenhuma. Depois de chegar, fica guardada
   // mesmo que uma nova busca falhe: é o que a tela mostra "sem internet".
   List<UnidadeResumo>? _unidades;
@@ -140,8 +118,6 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
       // só aparecem vazios.
     }
   }
-
-  // --- Carregar ---
 
   /// Primeira carga: GPS, depois local e unidades.
   Future<void> _iniciar() async {
@@ -235,7 +211,6 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
       );
       if (!mounted) return;
       setState(() {
-        // Guarda a lista exatamente como o Java mandou, já na ordem da distância.
         _unidades = lista;
         _atualizadoEm = _agora();
         _falha = null;
@@ -280,8 +255,6 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
     }
   }
 
-  // --- Ações ---
-
   void _verTodasAsUnidades() {
     final ir = widget.aoVerTodasAsUnidades;
     if (ir == null) {
@@ -304,8 +277,6 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
     }
   }
 
-  // --- Desenho ---
-
   @override
   Widget build(BuildContext context) {
     final temAviso = _aviso != null;
@@ -322,7 +293,6 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
           NexaLocalAtual(
             local: textoLocal,
             rotuloAcao: temAviso ? _rotuloAviso : 'Alterar',
-            // Sem aviso, não há link: o local é o do GPS e não se escolhe à mão.
             aoAlterar: temAviso ? (_acaoDoAviso ?? _recarregar) : null,
           ),
           Padding(
@@ -435,7 +405,6 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
     // Só o espaço de cima usa este bool. O `if` abaixo repete a condição de
     // propósito: o Dart só promove `atualizadoEm` a não nulo dentro dele.
     final mostraAviso = falha != null && atualizadoEm != null;
-    // Qual cartão leva o selo de menor espera (ou nenhum). Não muda a ordem.
     final indiceDoSelo = indiceDaMenorEspera(unidades);
 
     return Column(
@@ -459,8 +428,6 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
             onRefresh: _recarregar,
             color: NexaColors.green,
             backgroundColor: NexaColors.white,
-            // Escuta as favoritas: tocar no coração (aqui ou em outra aba)
-            // redesenha só a lista, sem recarregar nada.
             child: ValueListenableBuilder<Set<int>>(
               valueListenable: _repoFavoritas.ids,
               builder: (context, favoritas, _) {
@@ -491,7 +458,6 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
                         ),
                       ),
                       detalhes: unidade.detalhes,
-                      // O selo só faz sentido se há com quem comparar.
                       menorEspera: indice == indiceDoSelo,
                     );
                   },
@@ -531,7 +497,6 @@ class _BuscandoUnidades extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // `liveRegion`: o leitor de tela lê o texto quando ele aparece.
     return Semantics(
       liveRegion: true,
       child: Row(

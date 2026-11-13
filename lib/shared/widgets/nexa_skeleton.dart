@@ -3,10 +3,6 @@ import 'package:fe_nexa_app/app/theme/nexa_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Bloco cinza que pulsa enquanto o conteúdo carrega.
-///
-/// Se o celular pede menos movimento (`MediaQuery.disableAnimationsOf`), o
-/// bloco fica parado. Precisa ser `StatefulWidget` porque guarda o relógio da
-/// animação ([AnimationController]).
 class NexaSkeleton extends StatefulWidget {
   const NexaSkeleton({super.key, required this.altura, this.largura});
 
@@ -26,7 +22,6 @@ class _NexaSkeletonState extends State<NexaSkeleton>
     duration: const Duration(milliseconds: 900),
   );
 
-  // O bloco vai de 100% a 45% de opacidade e volta.
   late final Animation<double> _opacidade = Tween<double>(begin: 1, end: 0.45)
       .animate(CurvedAnimation(parent: _relogio, curve: Curves.easeInOut));
 
@@ -50,7 +45,6 @@ class _NexaSkeletonState extends State<NexaSkeleton>
 
   @override
   Widget build(BuildContext context) {
-    // Desenho decorativo: o leitor de tela lê o aviso "Buscando…" da tela.
     return ExcludeSemantics(
       child: FadeTransition(
         opacity: _opacidade,

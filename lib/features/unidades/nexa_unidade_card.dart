@@ -10,21 +10,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_skeleton.dart';
 import 'package:flutter/material.dart';
 
 /// Cartão de uma unidade de saúde nas listas (Home, Favoritas, Busca).
-///
-/// Mostra o nome, o coração de favoritar, o tempo de espera com o selo da faixa
-/// e, se houver, uma linha de detalhes. Tudo que o Java ainda não devolve
-/// ([detalhes], [chegada]) é opcional e simplesmente não aparece quando vem
-/// vazio: o cartão nunca inventa dado.
-///
-/// O cartão recebe valores simples, e não o modelo do Java. Assim ele não
-/// depende do formato da API, e quem monta a lista decide o que mostrar.
-///
-/// Estados do Figma:
-/// - normal: [tempoEspera] com número, selo "Espera curta/média/longa";
-/// - [menorEspera]: selo "Menor espera perto de você" no alto;
-/// - [dadosAntigos]: troca o selo da faixa por "Dados antigos";
-/// - sem número ([tempoEspera] nulo): "Estimativa indisponível";
-/// - carregando: use [NexaUnidadeCardCarregando].
 class NexaUnidadeCard extends StatelessWidget {
   const NexaUnidadeCard({
     super.key,
@@ -161,8 +146,6 @@ class NexaUnidadeCard extends StatelessWidget {
 
 /// Cartão de unidade enquanto a lista carrega: quatro blocos que pulsam, com
 /// a mesma altura aproximada do cartão de verdade (150 px).
-///
-/// O leitor de tela não lê o desenho: a tela avisa "Buscando unidades…".
 class NexaUnidadeCardCarregando extends StatelessWidget {
   const NexaUnidadeCardCarregando({super.key});
 
