@@ -39,3 +39,16 @@ String textoDaEspera(double minutos) {
   if (resto == 0) return 'Cerca de $horas h';
   return 'Cerca de $horas h ${resto.toString().padLeft(2, '0')}';
 }
+
+/// A espera em poucas palavras, para o número grande do detalhe: "40 min",
+/// "1 h 05". É o [textoDaEspera] sem o "Cerca de".
+String textoCurtoDaEspera(double minutos) {
+  final total = minutos.round();
+  if (total < 1) return '< 1 min';
+  if (total < 60) return '$total min';
+
+  final horas = total ~/ 60;
+  final resto = total % 60;
+  if (resto == 0) return '$horas h';
+  return '$horas h ${resto.toString().padLeft(2, '0')}';
+}

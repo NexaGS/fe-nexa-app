@@ -7,9 +7,12 @@ import 'package:flutter/material.dart';
 /// Implementa [PreferredSizeWidget] porque o `Scaffold` precisa saber a altura
 /// da barra antes de desenhá-la.
 class NexaAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const NexaAppBar({super.key, required this.title});
+  const NexaAppBar({super.key, required this.title, this.acoes});
 
   final String title;
+
+  /// Widgets no canto direito, como o coração de favoritar.
+  final List<Widget>? acoes;
 
   @override
   Size get preferredSize => const Size.fromHeight(56);
@@ -27,7 +30,13 @@ class NexaAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: () => Navigator.of(context).maybePop(),
         icon: const NexaIcon('back'),
       ),
-      title: Text(title, style: NexaText.title),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: NexaText.title,
+      ),
+      actions: acoes,
     );
   }
 }

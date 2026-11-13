@@ -1,4 +1,5 @@
 import 'package:fe_nexa_app/shared/widgets/nexa_skeleton.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/app_de_teste.dart';

@@ -12,7 +12,7 @@ Mostrar, para quem precisa de atendimento, o tempo de espera estimado nas unidad
 2. **Uma pasta por assunto.** Tudo de uma funcionalidade fica junto (`features/<nome>/`). O que várias usam fica em `shared/`.
 3. **Estilo em um lugar só.** Cores, textos, raios e tamanhos vêm de `lib/app/theme/`. Nenhuma tela escreve `Color(0x...)` nem `fontSize` na mão.
 4. **Acessibilidade desde o começo.** Reduzir movimento, leitor de tela, áreas de toque de pelo menos 44 px, fonte grande.
-5. **Poucas dependências.** Hoje só `flutter_svg` e `lottie`. Cada pacote novo entra quando uma tela precisar dele.
+5. **Poucas dependências.** Hoje: `flutter_svg`, `lottie`, `http`, `url_launcher`, `geolocator` e `shared_preferences`. Cada pacote novo entra quando uma tela precisar dele.
 
 ## Estrutura de pastas
 
@@ -31,7 +31,8 @@ lib/
 └── features/
     ├── inicio/              Início
     ├── auth/                Entrar, Criar conta
-    ├── unidades/            Lista, Unidade (detalhe)
+    ├── home/                Home (aba com a lista de unidades próximas)
+    ├── unidades/            Cartão e folha da espera; data/ (UnidadeResumo e repositórios)
     ├── busca/               Buscar (campo, itens da lista de locais)
     ├── favoritas/           Favoritas
     └── perfil/              Perfil
@@ -86,7 +87,8 @@ Antes de começar essa etapa: definir o formato do JSON de cada resposta, o esqu
 | --- | --- | --- |
 | Navegação | `Navigator` do próprio Flutter | Se as rotas crescerem, avaliar `go_router` |
 | Estado | `setState` e `ValueNotifier` | Quando o compartilhamento de estado entre telas doer (favoritas, usuário logado) |
-| HTTP | Não escolhido | Junto com o contrato da API |
+| HTTP | Pacote `http`; um repositório por assunto em `features/<nome>/data/`, atrás de uma interface | Se precisar de token em várias chamadas, centralizar o cliente |
+| Favoritas | `SharedPreferences` no aparelho, atrás de `FavoritasRepository` (com `ValueListenable` para as telas) | Quando o Java guardar as favoritas da conta |
 | Tema | Material 3 com `ColorScheme.light` e tokens próprios | Se houver modo escuro |
 | Fonte | Figtree embutida no app (funciona sem internet) | — |
 
