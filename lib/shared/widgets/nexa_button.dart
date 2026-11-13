@@ -40,7 +40,11 @@ class NexaButton extends StatelessWidget {
       children: [
         NexaIcon(nomeDoIcone, size: 20),
         const SizedBox(width: 8),
-        Text(label),
+        // `Flexible` + reticências: em botão estreito (dois lado a lado) o
+        // texto encolhe em vez de estourar a largura.
+        Flexible(
+          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
       ],
     );
     final Widget conteudo = carregando
@@ -57,6 +61,7 @@ class NexaButton extends StatelessWidget {
           disabledBackgroundColor: carregando ? NexaColors.lime : null,
           disabledForegroundColor: carregando ? NexaColors.ink : null,
           minimumSize: const Size.fromHeight(52),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           shape: const StadiumBorder(),
           textStyle: NexaText.bodyStrong,
         ),
@@ -68,6 +73,7 @@ class NexaButton extends StatelessWidget {
           backgroundColor: NexaColors.white,
           foregroundColor: NexaColors.ink,
           minimumSize: const Size.fromHeight(52),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           shape: const StadiumBorder(),
           side: const BorderSide(color: NexaColors.outline),
           textStyle: NexaText.bodyStrong,

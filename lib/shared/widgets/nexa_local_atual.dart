@@ -3,24 +3,28 @@ import 'package:fe_nexa_app/shared/widgets/nexa_button.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
-/// Linha do local usado na busca: pin, nome do local e um link de ação.
+/// Linha do local usado na busca: pin, nome do local e, se houver, um link de ação.
 class NexaLocalAtual extends StatelessWidget {
   const NexaLocalAtual({
     super.key,
     required this.local,
-    required this.aoAlterar,
+    this.aoAlterar,
     this.rotuloAcao = 'Alterar',
   });
 
   /// Texto pronto, por exemplo "Bela Vista, São Paulo".
   final String local;
-  final VoidCallback aoAlterar;
+
+  /// O que o link da direita faz. Sem ele (nulo), o link nem aparece: é o caso
+  /// da Home, onde o local vem sempre do GPS e não se escolhe à mão.
+  final VoidCallback? aoAlterar;
 
   /// Texto do link da direita. Normalmente "Alterar".
   final String rotuloAcao;
 
   @override
   Widget build(BuildContext context) {
+    final acao = aoAlterar;
     return Row(
       children: [
         const NexaIcon('pin', size: 22),
@@ -33,11 +37,12 @@ class NexaLocalAtual extends StatelessWidget {
             style: NexaText.bodyMedium,
           ),
         ),
-        NexaButton(
-          label: rotuloAcao,
-          variant: NexaButtonVariant.link,
-          onPressed: aoAlterar,
-        ),
+        if (acao != null)
+          NexaButton(
+            label: rotuloAcao,
+            variant: NexaButtonVariant.link,
+            onPressed: acao,
+          ),
       ],
     );
   }

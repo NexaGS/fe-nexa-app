@@ -7,15 +7,17 @@ import 'package:flutter/material.dart';
 /// Abre uma [NexaFolha] (painel que sobe do pé da tela) e espera ela fechar.
 ///
 /// Fecha ao tocar no botão, ao tocar fora, ao arrastar para baixo ou ao usar o
-/// gesto de voltar. Não devolve valor: a folha serve para explicar, não para
-/// perguntar (para perguntar, use [mostrarNexaDialogo]).
-Future<void> mostrarNexaFolha(
+/// gesto de voltar. Quando a folha só explica, não devolve nada (`null`). Quando
+/// ela serve para escolher uma opção (como o filtro de estado da Busca), cada
+/// opção chama `Navigator.of(context).pop(valor)` e o [T] é o tipo desse valor.
+/// Para perguntar sim ou não, use [mostrarNexaDialogo].
+Future<T?> mostrarNexaFolha<T>(
   BuildContext context, {
   required String titulo,
   required List<Widget> children,
   String rotuloFechar = 'Entendi',
 }) {
-  return showModalBottomSheet<void>(
+  return showModalBottomSheet<T>(
     context: context,
     // Deixa a folha crescer conforme o conteúdo (letra grande, tela baixa).
     isScrollControlled: true,
