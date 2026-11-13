@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fundo da tela nativa de abertura. Mantenha igual a SplashConfig.corInicial
+         (lib/features/splash/splash_config.dart) para a troca ser invisível. -->
+    <color name="nexa_splash_bg">#3F6B10</color>
+</resources>
