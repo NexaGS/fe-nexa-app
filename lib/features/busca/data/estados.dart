@@ -8,10 +8,6 @@ class EstadoBr {
 }
 
 /// Os 26 estados e o Distrito Federal, em ordem alfabética pelo nome.
-///
-/// A lista é fixa no app (os estados não mudam) em vez de vir do Java. O custo:
-/// um estado sem nenhuma unidade cadastrada aparece mesmo assim, e a Busca
-/// mostra "Nenhuma unidade encontrada".
 const List<EstadoBr> estadosDoBrasil = [
   EstadoBr('AC', 'Acre'),
   EstadoBr('AL', 'Alagoas'),

@@ -5,12 +5,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_button.dart';
 import 'package:flutter/material.dart';
 
 /// Abre uma [NexaFolha] (painel que sobe do pé da tela) e espera ela fechar.
-///
-/// Fecha ao tocar no botão, ao tocar fora, ao arrastar para baixo ou ao usar o
-/// gesto de voltar. Quando a folha só explica, não devolve nada (`null`). Quando
-/// ela serve para escolher uma opção (como o filtro de estado da Busca), cada
-/// opção chama `Navigator.of(context).pop(valor)` e o [T] é o tipo desse valor.
-/// Para perguntar sim ou não, use [mostrarNexaDialogo].
 Future<T?> mostrarNexaFolha<T>(
   BuildContext context, {
   required String titulo,
@@ -19,9 +13,7 @@ Future<T?> mostrarNexaFolha<T>(
 }) {
   return showModalBottomSheet<T>(
     context: context,
-    // Deixa a folha crescer conforme o conteúdo (letra grande, tela baixa).
     isScrollControlled: true,
-    // Não deixa a folha entrar debaixo da barra de status.
     useSafeArea: true,
     backgroundColor: NexaColors.white,
     barrierColor: NexaColors.scrim,
@@ -42,9 +34,6 @@ Future<T?> mostrarNexaFolha<T>(
 }
 
 /// Conteúdo de uma folha: alça, título, o que você passar e o botão de fechar.
-///
-/// É só o miolo. A moldura (cantos, fundo escuro atrás) vem de
-/// [mostrarNexaFolha]. Prefira abrir por ela.
 class NexaFolha extends StatelessWidget {
   const NexaFolha({
     super.key,
@@ -79,8 +68,6 @@ class NexaFolha extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // A alça é só um desenho: arrastar a folha já funciona em
-            // qualquer ponto dela, então o leitor de tela não precisa dela.
             const ExcludeSemantics(child: _Alca()),
             const SizedBox(height: NexaSpacing.md),
             Semantics(

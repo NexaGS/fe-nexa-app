@@ -5,16 +5,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Campo de busca da tela Buscar: lupa, texto e um "X" para limpar.
-///
-/// O texto mora no [controller], que é de quem usa o campo (a tela). O campo
-/// só desenha e avisa: [aoMudar] a cada letra, [aoEnviar] quando a pessoa toca
-/// em "buscar" no teclado.
-///
-/// Três estados do Figma:
-/// - **vazio**: mostra a dica ("Buscar endereço, bairro ou CEP");
-/// - **digitando**: mostra o texto e o "X";
-/// - **com foco**: um anel escuro em volta (o mesmo nos dois estados acima
-///   quando o teclado está aberto).
 class NexaCampoBusca extends StatefulWidget {
   const NexaCampoBusca({
     super.key,
@@ -66,13 +56,11 @@ class _NexaCampoBuscaState extends State<NexaCampoBusca> {
     widget.controller.clear();
     // `clear()` não dispara o `onChanged` do TextField, então avisamos à mão.
     widget.aoMudar?.call('');
-    // Quem limpa quase sempre vai digitar de novo: mantém o teclado aberto.
     _foco.requestFocus();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Reconstrói quando o foco muda (anel) ou quando o texto muda ("X").
     return ListenableBuilder(
       listenable: Listenable.merge([_foco, widget.controller]),
       builder: (context, _) {
@@ -118,8 +106,6 @@ class _NexaCampoBuscaState extends State<NexaCampoBusca> {
                       hintStyle: NexaText.body.copyWith(
                         color: NexaColors.inkSoft,
                       ),
-                      // Sem borda, fundo nem margem do Material: a moldura
-                      // é a do DecoratedBox acima.
                       border: InputBorder.none,
                       isCollapsed: true,
                     ),

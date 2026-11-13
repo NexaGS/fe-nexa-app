@@ -34,14 +34,12 @@ class _EntrarPageState extends State<EntrarPage> {
   }
 
   Future<void> _entrar() async {
-    FocusScope.of(context).unfocus(); // fecha o teclado
+    FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) {
       setState(() => _jaTentou = true);
       return;
     }
-
-
 
     setState(() => _carregando = true);
     try {
@@ -77,7 +75,6 @@ class _EntrarPageState extends State<EntrarPage> {
   }
 
   void _abrirCriarConta() {
-    // pushReplacement troca esta tela pela outra; o "voltar" leva ao Início.
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const CriarContaPage()),
     );

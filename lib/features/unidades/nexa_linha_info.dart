@@ -5,9 +5,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Uma linha do cartão de informações da unidade: ícone, rótulo pequeno e valor.
-///
-/// Exemplo: pin + "Endereço" + "Rua das Acácias, 120". A [acao] opcional fica
-/// à direita (no Figma, o botão de ligar na linha do telefone).
 class NexaLinhaInfo extends StatelessWidget {
   const NexaLinhaInfo({
     super.key,
@@ -48,7 +45,6 @@ class NexaLinhaInfo extends StatelessWidget {
           children: [
             NexaIcon(iconName, color: NexaColors.inkSoft),
             const SizedBox(width: NexaSpacing.md),
-            // Rótulo e valor viram uma frase só para o leitor de tela.
             Expanded(
               child: Semantics(
                 container: true,

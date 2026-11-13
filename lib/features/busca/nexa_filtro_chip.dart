@@ -5,10 +5,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Botão-filtro em forma de pílula, com uma setinha para baixo: "Estado: Todos".
-///
-/// Não guarda estado. Quem usa diz o [rotulo], se o filtro está [ativo] (pílula
-/// verde-clara) ou não (branca) e o que fazer ao tocar, normalmente abrir uma
-/// folha de escolha.
 class NexaFiltroChip extends StatelessWidget {
   const NexaFiltroChip({
     super.key,
@@ -36,7 +32,6 @@ class NexaFiltroChip extends StatelessWidget {
     return Semantics(
       button: true,
       label: rotuloSemantico ?? rotulo,
-      // O texto e o ícone de dentro são só desenho; o rótulo acima diz tudo.
       excludeSemantics: true,
       child: Material(
         color: ativo ? NexaColors.cream : NexaColors.white,
@@ -49,7 +44,6 @@ class NexaFiltroChip extends StatelessWidget {
           customBorder: const StadiumBorder(),
           onTap: aoTocar,
           child: ConstrainedBox(
-            // 44 px: a área de toque mínima do projeto.
             constraints: const BoxConstraints(
               minHeight: NexaSizes.minTouchTarget,
             ),

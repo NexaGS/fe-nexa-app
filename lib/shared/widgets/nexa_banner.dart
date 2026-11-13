@@ -9,11 +9,6 @@ import 'package:flutter/material.dart';
 enum NexaBannerTom { neutro, informativo }
 
 /// Aviso fixo no alto de uma lista, com ícone, mensagem e uma ação opcional.
-///
-/// Exemplos do Figma:
-/// - "Mostrando dados de há 12 min · Tentar de novo" (neutro, ação no texto);
-/// - "Suas favoritas estão só neste aparelho" + botão "Criar conta"
-///   (informativo, [acaoEmBotao] ligado).
 class NexaBanner extends StatelessWidget {
   const NexaBanner({
     super.key,
@@ -100,8 +95,6 @@ class NexaBanner extends StatelessWidget {
       );
     } else {
       conteudo = Padding(
-        // À direita sobra menos espaço quando há link, porque o próprio
-        // botão do link já tem folga nos lados.
         padding: EdgeInsets.fromLTRB(
           NexaSpacing.md,
           0,
@@ -138,7 +131,6 @@ class NexaBanner extends StatelessWidget {
       );
     }
 
-    // `liveRegion`: o leitor de tela anuncia o aviso quando ele aparece.
     return Semantics(
       container: true,
       liveRegion: true,

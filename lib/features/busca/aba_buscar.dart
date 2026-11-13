@@ -33,16 +33,6 @@ const double _espacoEntreCartoes = 14;
 const double _distanciaParaCarregarMais = 600;
 
 /// Aba Buscar: o catálogo de todas as unidades cadastradas.
-///
-/// Sem filtro, mostra todas, de todos os estados, em ordem alfabética, e vai
-/// pedindo mais ao Java conforme a pessoa rola (paginação). Dois filtros:
-/// - **nome**: o texto do campo, que o Java procura em qualquer parte do nome;
-/// - **estado**: a sigla escolhida na folha "Filtrar por estado".
-///
-/// A busca por perto, com o GPS, é da Home. Aqui não há ponto de partida.
-///
-/// O repositório e as favoritas são opcionais no construtor: sem passar nada,
-/// a tela usa os reais; os testes e a galeria passam versões falsas.
 class AbaBuscar extends StatefulWidget {
   const AbaBuscar({
     super.key,
@@ -78,19 +68,16 @@ class _AbaBuscarState extends State<AbaBuscar> {
   FavoritasRepository get _repoFavoritas =>
       widget.favoritas ?? favoritasRepository;
 
-  // --- Os filtros que estão valendo ---
   String _nome = '';
 
   /// Sigla do estado; vazia = todos.
   String _uf = '';
 
-  // --- O que já chegou do Java ---
   List<UnidadeResumo> _itens = const [];
   int _total = 0;
   int _proximaPagina = 0;
   bool _ultima = false;
 
-  // --- Em que momento a lista está ---
   bool _carregandoPrimeira = true;
   bool _carregandoMais = false;
   _Falha? _falhaPrimeira;
@@ -119,8 +106,6 @@ class _AbaBuscarState extends State<AbaBuscar> {
     _controller.dispose();
     super.dispose();
   }
-
-  // --- Carregar ---
 
   /// Zera a lista e busca a primeira página com os filtros de agora.
   void _recomecar() {
@@ -214,8 +199,6 @@ class _AbaBuscarState extends State<AbaBuscar> {
     });
   }
 
-  // --- Rolagem ---
-
   void _aoRolar() {
     if (_falhouAoCarregarMais || !_rolagem.hasClients) return;
     if (_rolagem.position.extentAfter < _distanciaParaCarregarMais) {
@@ -234,8 +217,6 @@ class _AbaBuscarState extends State<AbaBuscar> {
     });
   }
 
-  // --- Ações ---
-
   void _aoMudarTexto(String texto) {
     _digitando?.cancel();
     _digitando = Timer(widget.atrasoDaDigitacao, () => _aplicarNome(texto));
@@ -244,7 +225,6 @@ class _AbaBuscarState extends State<AbaBuscar> {
   void _aoEnviarTexto(String texto) {
     _digitando?.cancel();
     _aplicarNome(texto);
-    // Fecha o teclado para o resultado aparecer inteiro.
     _foco.unfocus();
   }
 
@@ -285,8 +265,6 @@ class _AbaBuscarState extends State<AbaBuscar> {
       );
     }
   }
-
-  // --- Desenho ---
 
   @override
   Widget build(BuildContext context) {
@@ -409,12 +387,10 @@ class _AbaBuscarState extends State<AbaBuscar> {
     return ValueListenableBuilder<Set<int>>(
       valueListenable: _repoFavoritas.ids,
       builder: (context, favoritas, _) {
-        // Uma linha a mais no fim da lista: o "carregando mais" ou o erro.
         final temRodape = _carregandoMais || _falhouAoCarregarMais;
 
         return ListView.separated(
           controller: _rolagem,
-          // Arrastar a lista fecha o teclado.
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.only(
             top: NexaSpacing.sm,
@@ -492,7 +468,6 @@ class _Contagem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final quantas = total == 1 ? '1 unidade' : '$total unidades';
-    // `liveRegion`: o leitor de tela lê de novo quando o número muda.
     return Semantics(
       liveRegion: true,
       child: Text(

@@ -28,14 +28,12 @@ class _CriarContaPageState extends State<CriarContaPage> {
 
   bool _carregando = false;
 
-  // Marcado na caixinha de localização. O Spring só cria a conta com `true`.
   bool _aceitouLocalizacao = false;
 
   // Só depois do primeiro toque em "Criar conta" os erros passam a atualizar
   // enquanto a pessoa digita.
   bool _jaTentou = false;
 
-  // Erro que veio do servidor ("e-mail já cadastrado"), mostrado no campo.
   String? _erroEmail;
 
   @override
@@ -48,7 +46,7 @@ class _CriarContaPageState extends State<CriarContaPage> {
   }
 
   Future<void> _criarConta() async {
-    FocusScope.of(context).unfocus(); // fecha o teclado
+    FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) {
       setState(() => _jaTentou = true);
@@ -75,8 +73,8 @@ class _CriarContaPageState extends State<CriarContaPage> {
       if (!mounted) return;
       setState(() {
         _erroEmail = 'Já existe uma conta com este e-mail. Tente entrar.';
-        _jaTentou = true; // a partir daqui os erros acompanham a digitação
-        _carregando = false; // reabilita os campos antes de validar de novo
+        _jaTentou = true;
+        _carregando = false;
       });
       // Depois que a tela for redesenhada (campos habilitados), roda a
       // validação de novo para o erro do servidor aparecer no campo.

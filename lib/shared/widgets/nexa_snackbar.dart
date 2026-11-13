@@ -5,8 +5,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Avisos que aparecem por cima da tela e somem sozinhos.
-///
-/// Os dois tipos aceitam uma ação opcional ("Desfazer"): passe [rotuloAcao]
 abstract final class NexaSnackbar {
   /// Aviso vermelho: algo deu errado.
   static void erro(

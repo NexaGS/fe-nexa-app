@@ -14,11 +14,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Galeria da aba Home: cada estado do Figma, sem precisar do Java nem do GPS.
-///
-/// Rode com: `flutter run -t lib/galeria/galeria_home.dart`
-///
-/// Os botões do alto escolhem o cenário. Os dados são de mentira e a "rede"
-/// demora 700 ms de propósito, para dar tempo de ver o esqueleto.
 void main() => runApp(const _GaleriaHome());
 
 enum _Cenario {
@@ -106,7 +101,7 @@ class _UnidadesDoCenario implements UnidadesRepository {
       case _Cenario.gpsDesligado:
         return _unidades;
       case _Cenario.carregando:
-        return Completer<List<UnidadeResumo>>().future; // nunca chega
+        return Completer<List<UnidadeResumo>>().future;
       case _Cenario.erroDoServidor:
         // Falha na 1ª vez e dá certo no "Tentar de novo".
         if (_chamadas == 1) throw const ErroInesperado();
@@ -149,8 +144,6 @@ class _GaleriaHome extends StatefulWidget {
 class _GaleriaHomeState extends State<_GaleriaHome> {
   _Cenario _cenario = _Cenario.lista;
 
-  // Criados ao escolher o cenário (e não no `build`), para os contadores de
-  // chamadas não zerarem a cada redesenho.
   late LocalizacaoService _gps = _GpsDoCenario(_cenario);
   late UnidadesRepository _repositorio = _UnidadesDoCenario(_cenario);
   late FavoritasRepository _favoritas = _FavoritasNaMemoria();
@@ -194,7 +187,6 @@ class _GaleriaHomeState extends State<_GaleriaHome> {
               ),
               Expanded(
                 child: AbaHome(
-                  // A chave nova recria a tela do zero a cada cenário.
                   key: ValueKey(_cenario),
                   nome: 'Julio',
                   aoVerTodasAsUnidades: () {},

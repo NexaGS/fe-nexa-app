@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 
 /// Paleta Porcelana do Nexa, copiada do Figma.
-///
-/// Regra do projeto: nenhuma tela ou widget escreve `Color(0x...)` na mão.
-/// Se precisar de uma cor, ela vem daqui. Se a cor não existe, primeiro
-/// ela entra no Figma e neste arquivo.
-///
-/// `0xFF` no começo do número é a opacidade (FF = 100%); o resto é o
-/// código hexadecimal do Figma, sem o `#`.
 abstract final class NexaColors {
   // Texto, bordas e fundos neutros
   static const ink = Color(0xFF151C18); // texto principal

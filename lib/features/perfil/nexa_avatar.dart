@@ -16,8 +16,6 @@ class NexaAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final iniciais = iniciaisDoNome(nome);
 
-    // O nome já aparece escrito ao lado, então o leitor de tela não precisa
-    // ler o avatar.
     return ExcludeSemantics(
       child: Container(
         width: NexaSizes.avatar,

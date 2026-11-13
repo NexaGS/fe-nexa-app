@@ -1,7 +1,4 @@
 /// Uma unidade de saúde, como o Java devolve (`UnidadeSaudeResponse`).
-///
-/// Guarda só o que as telas usam. O formato do JSON fica todo aqui: se o Java
-/// mudar o nome de um campo, é neste arquivo que se corrige.
 class UnidadeResumo {
   const UnidadeResumo({
     required this.id,
@@ -19,9 +16,6 @@ class UnidadeResumo {
 
   /// Lê um item de `conteudo` da resposta de `GET /api/unidades/proximas` ou de
   /// `GET /api/unidades`.
-  ///
-  /// Se faltar `id` ou `nomeUnidade`, ou se algum campo vier com outro tipo,
-  /// o `as` lança [TypeError]. O repositório traduz isso em "erro inesperado".
   factory UnidadeResumo.fromJson(Map<String, dynamic> json) {
     return UnidadeResumo(
       id: (json['id'] as num).toInt(),
@@ -88,9 +82,6 @@ class UnidadeResumo {
   }
 
   /// Linha de baixo do cartão: a distância (quando vem), o bairro e o tipo.
-  ///
-  /// Pessoas aguardando e "atualizado há" ainda não vêm do Java (estão no
-  /// backlog), então não aparecem.
   List<String> get detalhes => _montarDetalhes(comCidade: false);
 
   /// Igual a [detalhes], com "Cidade, UF" entre o bairro e o tipo. É a linha da
@@ -140,15 +131,6 @@ String textoDaDistancia(double km) {
 
 /// Posição, na lista, da unidade com a menor espera. `null` quando não há o que
 /// destacar.
-///
-/// A lista continua na ordem que o Java mandou (da mais perto para a mais
-/// longe): esta função só aponta qual cartão leva o selo "Menor espera perto de
-/// você", sem mexer na ordem. Devolve `null` quando:
-/// - nenhuma unidade tem tempo de espera;
-/// - todas as unidades que têm tempo estão empatadas (não há "menor");
-/// - só uma unidade tem tempo (não há com quem comparar).
-///
-/// Em empate pela menor espera, vale a primeira, ou seja, a mais perto.
 int? indiceDaMenorEspera(List<UnidadeResumo> unidades) {
   int? indice;
   double? menor;
@@ -161,7 +143,6 @@ int? indiceDaMenorEspera(List<UnidadeResumo> unidades) {
     if (espera == null) continue;
 
     if (menor == null || espera < menor) {
-      // Achou uma espera menor: a menor de antes passa a ser "uma maior".
       if (menor != null) existeMaior = true;
       menor = espera;
       indice = posicao;

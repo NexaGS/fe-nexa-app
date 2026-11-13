@@ -7,10 +7,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Abre a folha "Filtrar por estado" e espera a escolha.
-///
-/// Devolve a sigla escolhida (`SP`), uma string vazia para "Todos os estados",
-/// ou `null` se a pessoa fechou sem escolher (nesse caso nada muda).
-/// [siglaAtual] marca a opção que já está valendo; vazia = "Todos".
 Future<String?> escolherEstado(
   BuildContext context, {
   required String siglaAtual,

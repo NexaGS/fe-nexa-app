@@ -8,10 +8,6 @@ import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Abre a folha "Como calculamos a espera".
-///
-/// É a mesma folha para quem chega pelo Perfil ("Como calculamos a espera")
-/// e pelo detalhe da unidade ("Como calculamos?"). Por isso o texto mora aqui,
-/// em um lugar só.
 Future<void> mostrarFolhaEspera(BuildContext context) {
   return mostrarNexaFolha(
     context,
@@ -68,9 +64,6 @@ class _Explicacao extends StatelessWidget {
 }
 
 /// O quadro cinza que diz o que cada faixa quer dizer em horas.
-///
-/// Os números saem de [limiteEsperaCurtaMin] e [limiteEsperaMediaMin], os
-/// mesmos que [nivelDaEspera] usa. Se a regra mudar, a legenda muda junto.
 class _LegendaDasFaixas extends StatelessWidget {
   const _LegendaDasFaixas();
 
