@@ -3,17 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fe_nexa_app/app/config/api_config.dart';
+import 'package:fe_nexa_app/features/auth/data/jwt.dart';
+import 'package:fe_nexa_app/features/auth/data/sessao.dart';
 import 'package:http/http.dart' as http;
 
-/// Quem entrou no app. O [token] é a "chave" que o Spring devolve e que será
-/// enviada nas próximas chamadas que exigirem login.
-class Sessao {
-  const Sessao({required this.email, required this.token, this.nome});
-
-  final String email;
-  final String token;
-  final String? nome;
-}
+export 'package:fe_nexa_app/features/auth/data/sessao.dart';
 
 /// Erros que as telas sabem explicar para a pessoa.
 class CredenciaisInvalidas implements Exception {
@@ -28,6 +22,12 @@ class EmailJaCadastrado implements Exception {
 /// pelo sistema web e não pelo app.
 class ContaDeColaborador implements Exception {
   const ContaDeColaborador();
+}
+
+/// O Spring recusou o refresh token (vencido, já usado, revogado ou conta
+/// removida). Não há o que tentar de novo: a pessoa precisa entrar outra vez.
+class SessaoRecusada implements Exception {
+  const SessaoRecusada();
 }
 
 class SemConexao implements Exception {
@@ -51,6 +51,15 @@ abstract interface class AuthRepository {
     required String confirmarSenha,
     required bool aceitouLocalizacao,
   });
+
+  /// Troca o refresh token de [atual] por uma sessão nova (access e refresh
+  /// novos). Lança [SessaoRecusada] se o Spring recusar, [SemConexao] se não
+  /// deu para falar com ele e [ErroInesperado] para qualquer outra resposta.
+  Future<Sessao> renovar(Sessao atual);
+
+  /// Avisa o Spring que esta sessão acabou, para ele revogar o refresh token.
+  /// Falha em silêncio: sair do app nunca pode depender da internet.
+  Future<void> sair(Sessao atual);
 }
 
 /// Conversa de verdade com o Spring.
@@ -74,7 +83,7 @@ class AuthRepositoryHttp implements AuthRepository {
 
     // O mesmo /login atende o sistema web (colaborador). O app é só do
     // cidadão, então a conta de colaborador não entra aqui.
-    if (_papelDoToken(sessao.token) == 'COLABORADOR') {
+    if (_papelDoToken(sessao.accessToken) == 'COLABORADOR') {
       throw const ContaDeColaborador();
     }
     return sessao;
@@ -101,6 +110,28 @@ class AuthRepositoryHttp implements AuthRepository {
     if (resposta.statusCode != 201) throw const ErroInesperado();
 
     return _lerSessao(resposta, emailNormalizado);
+  }
+
+  @override
+  Future<Sessao> renovar(Sessao atual) async {
+    final resposta = await _postar('/api/auth/refresh', {
+      'refreshToken': atual.refreshToken,
+    });
+
+    if (resposta.statusCode == 401) throw const SessaoRecusada();
+    if (resposta.statusCode != 200) throw const ErroInesperado();
+
+    return _lerSessao(resposta, atual.email);
+  }
+
+  @override
+  Future<void> sair(Sessao atual) async {
+    try {
+      await _postar('/api/auth/logout', {'refreshToken': atual.refreshToken});
+    } catch (_) {
+      // Sem internet o servidor continua com o refresh token até ele vencer;
+      // o aparelho já o apagou, que é o que importa para esta pessoa.
+    }
   }
 
   /// "  Ana@Exemplo.com " e "ana@exemplo.com" têm que ser a mesma conta.
@@ -132,9 +163,13 @@ class AuthRepositoryHttp implements AuthRepository {
     try {
       final json =
       jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>;
-      final token = json['token'] as String;
-      final nome = _dadosDoToken(token)?['nome'] as String?;
-      return Sessao(email: email, token: token, nome: nome);
+      final segundos = (json['refreshExpiresInSeconds'] as num).toInt();
+      return Sessao(
+        email: email,
+        accessToken: json['token'] as String,
+        refreshToken: json['refreshToken'] as String,
+        refreshExpiraEm: DateTime.now().add(Duration(seconds: segundos)),
+      );
     } on FormatException {
       throw const ErroInesperado();
     } on TypeError {
@@ -142,25 +177,8 @@ class AuthRepositoryHttp implements AuthRepository {
     }
   }
 
-  /// O token JWT tem 3 partes separadas por ponto: cabeçalho.dados.assinatura.
-  /// A parte do meio é um JSON em base64 com o "role" e o "nome". Aqui só
-  /// LEMOS esses dados, para escolher a tela e dar boas-vindas. Quem confere
-  /// a assinatura e dá permissão de verdade é o Spring.
-  Map<String, dynamic>? _dadosDoToken(String token) {
-    try {
-      final partes = token.split('.');
-      if (partes.length != 3) return null;
-      // "normalize" completa os "=" do final que o base64 do JWT dispensa.
-      final miolo = base64Url.normalize(partes[1]);
-      final dados = utf8.decode(base64Url.decode(miolo));
-      return jsonDecode(dados) as Map<String, dynamic>;
-    } catch (_) {
-      return null;
-    }
-  }
-
   String? _papelDoToken(String token) =>
-      _dadosDoToken(token)?['role'] as String?;
+      dadosDoToken(token)?['role'] as String?;
 }
 
 /// A instância que as telas usam. Para testar sem rede, troque aqui por uma

@@ -2,6 +2,7 @@ import 'package:fe_nexa_app/app/theme/nexa_colors.dart';
 import 'package:fe_nexa_app/app/theme/nexa_text.dart';
 import 'package:fe_nexa_app/app/theme/nexa_tokens.dart';
 import 'package:fe_nexa_app/features/auth/data/auth_repository.dart';
+import 'package:fe_nexa_app/features/auth/data/sessao_service.dart';
 import 'package:fe_nexa_app/features/auth/validadores.dart';
 import 'package:fe_nexa_app/features/home/home_page.dart';
 import 'package:fe_nexa_app/shared/widgets/guia_view.dart';
@@ -62,11 +63,12 @@ class _CriarContaPageState extends State<CriarContaPage> {
         confirmarSenha: _confirmar.text,
         aceitouLocalizacao: _aceitouLocalizacao,
       );
+      await sessaoService.entrou(sessao);
       if (!mounted) return;
       await _mostrarContaCriada();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => HomePage(nome: sessao.nome)),
+        MaterialPageRoute(builder: (_) => HomePage(sessao: sessao)),
         (rota) => false,
       );
     } on EmailJaCadastrado {

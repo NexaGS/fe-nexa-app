@@ -1,5 +1,6 @@
 import 'package:fe_nexa_app/features/auth/criar_conta_page.dart';
 import 'package:fe_nexa_app/features/auth/data/auth_repository.dart';
+import 'package:fe_nexa_app/features/auth/data/sessao_service.dart';
 import 'package:fe_nexa_app/features/auth/validadores.dart';
 import 'package:fe_nexa_app/features/home/home_page.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_app_bar.dart';
@@ -47,9 +48,10 @@ class _EntrarPageState extends State<EntrarPage> {
         email: _email.text,
         senha: _senha.text,
       );
+      await sessaoService.entrou(sessao);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => HomePage(nome: sessao.nome)),
+        MaterialPageRoute(builder: (_) => HomePage(sessao: sessao)),
         (rota) => false,
       );
     } on CredenciaisInvalidas {
