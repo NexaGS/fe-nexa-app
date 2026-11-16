@@ -81,10 +81,11 @@ class NexaBanner extends StatelessWidget {
             OutlinedButton(
               onPressed: acao,
               style: OutlinedButton.styleFrom(
+                backgroundColor: NexaColors.white,
                 foregroundColor: corDoTexto,
                 side: BorderSide(color: corDoTexto),
                 shape: const StadiumBorder(),
-                minimumSize: const Size(0, NexaSizes.minTouchTarget),
+                minimumSize: const Size(0, 48),
                 padding: const EdgeInsets.symmetric(horizontal: NexaSpacing.lg),
                 textStyle: NexaText.smallStrong,
               ),

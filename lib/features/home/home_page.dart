@@ -1,5 +1,7 @@
 import 'package:fe_nexa_app/app/theme/nexa_text.dart';
+import 'package:fe_nexa_app/features/auth/data/auth_repository.dart';
 import 'package:fe_nexa_app/features/busca/aba_buscar.dart';
+import 'package:fe_nexa_app/features/favoritas/aba_favoritas.dart';
 import 'package:fe_nexa_app/features/home/aba_home.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_bottom_nav.dart';
 import 'package:flutter/material.dart';
@@ -7,9 +9,10 @@ import 'package:flutter/material.dart';
 /// A casca do app depois do login: o conteúdo de cada aba e a barra de baixo.
 /// Quem entra com conta e quem segue como visitante chegam aqui.
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, this.nome});
+  const HomePage({super.key, this.sessao});
 
-  final String? nome;
+  /// Quem está logado. Nulo = visitante.
+  final Sessao? sessao;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -17,6 +20,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   /// Posição de "Buscar" em [NexaBottomNav].
+  static const _abaHome = 0;
   static const _abaBuscar = 1;
 
   int _aba = 0;
@@ -25,11 +29,16 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final abas = [
       AbaHome(
-        nome: widget.nome,
+        nome: widget.sessao?.nome,
         aoVerTodasAsUnidades: () => setState(() => _aba = _abaBuscar),
       ),
       const AbaBuscar(),
-      const _AbaProvisoria('Favoritas'),
+      AbaFavoritas(
+        temConta: widget.sessao != null,
+        aoVerUnidades: () => setState(() => _aba = _abaHome),
+        aoCriarConta: () =>
+            Navigator.of(context).popUntil((rota) => rota.isFirst),
+      ),
       const _AbaProvisoria('Perfil'),
     ];
 

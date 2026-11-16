@@ -27,8 +27,8 @@ void main() {
         .replaceAll('é', 'e')
         .replaceAll('ó', 'o')
         .replaceAll('ç', 'c');
-    final ordenados = [...nomes]
-      ..sort((a, b) => semAcento(a).compareTo(semAcento(b)));
+    String chave(String s) => semAcento(s).toLowerCase();
+    final ordenados = [...nomes]..sort((a, b) => chave(a).compareTo(chave(b)));
     expect(nomes, ordenados);
   });
 

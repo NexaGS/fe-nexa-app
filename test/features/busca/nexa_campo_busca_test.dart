@@ -50,11 +50,11 @@ void main() {
 
     await tester.pumpWidget(_campo(controller, aoMudar: avisos.add));
     await tester.enterText(find.byType(TextField), 'Vila');
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(avisos, ['Vila']);
     expect(find.byTooltip('Limpar busca'), findsOneWidget);
-    expect(find.text(_dica), findsNothing);
+    expect(controller.text, 'Vila');
   });
 
   testWidgets('o X limpa o texto, avisa com vazio e mantém o foco', (

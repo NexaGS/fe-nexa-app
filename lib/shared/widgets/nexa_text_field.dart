@@ -1,5 +1,4 @@
 import 'package:fe_nexa_app/app/theme/nexa_tokens.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/nexa_colors.dart';

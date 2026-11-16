@@ -40,14 +40,30 @@ abstract final class NexaSnackbar {
     );
   }
 
+  static void desfazer(
+    BuildContext context,
+    String mensagem, {
+    required VoidCallback aoDesfazer,
+    String rotuloAcao = 'Desfazer',
+  }) {
+    _mostrar(
+      context,
+      mensagem,
+      cor: NexaColors.greenDark,
+      rotuloAcao: rotuloAcao,
+      aoAcionar: aoDesfazer,
+    );
+  }
+
   static void _mostrar(
     BuildContext context,
     String mensagem, {
     required Color cor,
-    required String icone,
+    String? icone,
     String? rotuloAcao,
     VoidCallback? aoAcionar,
   }) {
+    final nomeDoIcone = icone;
     final rotulo = rotuloAcao;
     final aoTocar = aoAcionar;
     final acao = (rotulo == null || aoTocar == null)
@@ -72,8 +88,10 @@ abstract final class NexaSnackbar {
           ),
           content: Row(
             children: [
-              NexaIcon(icone, color: NexaColors.white),
-              const SizedBox(width: 12),
+              if (nomeDoIcone != null) ...[
+                NexaIcon(nomeDoIcone, color: NexaColors.white),
+                const SizedBox(width: 12),
+              ],
               Expanded(
                 child: Text(
                   mensagem,

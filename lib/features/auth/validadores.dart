@@ -1,5 +1,4 @@
 /// Regras de validação dos formulários de Entrar e Criar conta.
-
 abstract final class Validadores {
   static const senhaMinima = 8;
   static const senhaMaxima = 72;
