@@ -347,7 +347,11 @@ void main() {
     catalogo.respostas[0].complete(_paginaCom([_unidade(1)]));
     await tester.pumpAndSettle();
 
-    expect(find.text('Unidade 20'), findsOneWidget);
+    final cartoes = find.byType(NexaUnidadeCard);
+    expect(
+      find.descendant(of: cartoes, matching: find.text('Unidade 20')),
+      findsOneWidget,
+    );
     expect(find.text('Unidade 01'), findsNothing);
   });
 

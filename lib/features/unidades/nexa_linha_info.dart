@@ -62,7 +62,7 @@ class NexaLinhaInfo extends StatelessWidget {
                 ),
               ),
             ),
-            if (extra != null) extra,
+            ?extra,
           ],
         ),
       ),

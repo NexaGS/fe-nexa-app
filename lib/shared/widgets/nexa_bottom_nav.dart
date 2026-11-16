@@ -1,6 +1,5 @@
 import 'package:fe_nexa_app/app/theme/nexa_tokens.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/nexa_colors.dart';
@@ -17,10 +16,10 @@ class NexaBottomNav extends StatelessWidget {
   final ValueChanged<int> aoSelecionar;
 
   static const _destinos = [
-    (rotulo: 'Home', icone: 'home'),
-    (rotulo: 'Buscar', icone: 'search'),
-    (rotulo: 'Favoritas', icone: 'heart'),
-    (rotulo: 'Perfil', icone: 'user'),
+    (rotulo: 'Home', icone: 'home', iconeAtivo: 'home'),
+    (rotulo: 'Buscar', icone: 'search', iconeAtivo: 'search'),
+    (rotulo: 'Favoritas', icone: 'heart', iconeAtivo: 'heart_filled'),
+    (rotulo: 'Perfil', icone: 'user', iconeAtivo: 'user'),
   ];
 
   @override
@@ -51,7 +50,7 @@ class NexaBottomNav extends StatelessWidget {
             for (final destino in _destinos)
               NavigationDestination(
                 icon: NexaIcon(destino.icone, color: NexaColors.inkSoft,),
-                selectedIcon: NexaIcon(destino.icone),
+                selectedIcon: NexaIcon(destino.iconeAtivo),
                 label: destino.rotulo,
               )
           ],

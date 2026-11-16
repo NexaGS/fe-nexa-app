@@ -1,5 +1,4 @@
 import 'package:fe_nexa_app/features/busca/nexa_filtro_chip.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/app_de_teste.dart';

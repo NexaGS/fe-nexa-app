@@ -10,11 +10,10 @@ class NexaCheckboxField extends FormField<bool> {
     super.key,
     required String label,
     super.validator,
-    bool enabled = true,
+    super.enabled,
     ValueChanged<bool>? onChanged,
   }) : super(
          initialValue: false,
-         enabled: enabled,
          builder: (campo) {
            final marcado = campo.value ?? false;
            final temErro = campo.hasError;
@@ -35,12 +34,12 @@ class NexaCheckboxField extends FormField<bool> {
              children: [
                Semantics(
                  checked: marcado,
-                 enabled: enabled,
+                 enabled: campo.widget.enabled,
                  label: label,
                  excludeSemantics: true,
-                 onTap: enabled ? alternar : null,
+                 onTap: campo.widget.enabled ? alternar : null,
                  child: InkWell(
-                   onTap: enabled ? alternar : null,
+                   onTap: campo.widget.enabled ? alternar : null,
                    borderRadius: BorderRadius.circular(NexaRadius.snackbar),
                    child: Padding(
                      // 10 em cima e embaixo + 24 da caixinha = 44, o menor

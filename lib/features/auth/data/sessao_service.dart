@@ -8,12 +8,10 @@ import 'package:flutter/foundation.dart';
 /// decide quando renovar os tokens ou encerrar a sessão.
 class SessaoService {
   SessaoService({
-    required AuthRepository auth,
-    required SessaoRepository armazenamento,
+    required this._auth,
+    required this._armazenamento,
     DateTime Function()? agora,
-  }) : _auth = auth,
-       _armazenamento = armazenamento,
-       _agora = agora ?? DateTime.now;
+  }) : _agora = agora ?? DateTime.now;
 
   final AuthRepository _auth;
   final SessaoRepository _armazenamento;

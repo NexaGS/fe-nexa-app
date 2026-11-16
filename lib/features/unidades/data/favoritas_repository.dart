@@ -1,3 +1,4 @@
+import 'package:fe_nexa_app/features/favoritas/data/favoritas_conta_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -6,19 +7,13 @@ class FavoritaNaoSalva implements Exception {
   const FavoritaNaoSalva();
 }
 
-/// O contrato: as telas favoritam sem saber onde isso fica guardado.
 abstract interface class FavoritasRepository {
-  /// Os `id`s das unidades favoritas. Muda sempre que alguém favorita ou
-  /// desfavorita, em qualquer tela. As telas escutam este valor e se
-  /// redesenham sozinhas.
+
   ValueListenable<Set<int>> get ids;
 
   /// Lê o que está guardado no aparelho. Chame uma vez, ao abrir a tela.
   Future<void> carregar();
 
-  /// Liga ou desliga a favorita de uma unidade. A mudança aparece em [ids] na
-  /// hora; se o aparelho não conseguir guardar, volta atrás e lança
-  /// [FavoritaNaoSalva].
   Future<void> definir(int id, {required bool favorita});
 }
 
@@ -57,8 +52,6 @@ class FavoritasRepositoryLocal implements FavoritasRepository {
     }
   }
 
-  /// Uma cópia do conjunto com [id] ligado ou desligado. Sempre uma cópia
-  /// nova: o `ValueNotifier` só avisa quando o objeto muda.
   Set<int> _comMudanca(Set<int> atual, int id, bool favorita) {
     final novo = {...atual};
     if (favorita) {
@@ -70,5 +63,4 @@ class FavoritasRepositoryLocal implements FavoritasRepository {
   }
 }
 
-/// A instância que as telas usam.
-final FavoritasRepository favoritasRepository = FavoritasRepositoryLocal();
+final FavoritasRepository favoritasRepository = favoritasDaConta;

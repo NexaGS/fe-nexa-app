@@ -96,7 +96,7 @@ class UnidadeResumo {
     return [
       if (distancia != null) textoDaDistancia(distancia),
       if (nomeDoBairro != null && nomeDoBairro.isNotEmpty) nomeDoBairro,
-      if (cidade != null) cidade,
+      ?cidade,
       if (tipo != null && tipo.isNotEmpty) rotuloDoTipo(tipo),
     ];
   }

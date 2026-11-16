@@ -15,9 +15,8 @@ import 'package:http/http.dart' as http;
 /// Só aceita requisições simples ([http.Request]: `get`, `post` com corpo em
 /// texto), que podem ser repetidas. Upload em partes não passa por aqui.
 class ClienteAutenticado extends http.BaseClient {
-  ClienteAutenticado({required SessaoService sessoes, http.Client? interno})
-    : _sessoes = sessoes,
-      _interno = interno ?? http.Client();
+  ClienteAutenticado({required this._sessoes, http.Client? interno})
+    : _interno = interno ?? http.Client();
 
   final SessaoService _sessoes;
   final http.Client _interno;
