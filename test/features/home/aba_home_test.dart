@@ -60,6 +60,9 @@ class _UnidadesFalso implements UnidadesRepository {
     if (resposta is Exception) throw resposta;
     return resposta as List<UnidadeResumo>;
   }
+
+  @override
+  Future<UnidadeResumo> porId(int id) => throw const SemConexao();
 }
 
 /// Nunca responde sozinho: serve para ver a tela "carregando".
@@ -70,6 +73,9 @@ class _UnidadesPendente implements UnidadesRepository {
     required double longitude,
     int tamanho = 20,
   }) => Completer<List<UnidadeResumo>>().future;
+
+  @override
+  Future<UnidadeResumo> porId(int id) => throw const SemConexao();
 }
 
 class _FavoritasFalso implements FavoritasRepository {
@@ -105,6 +111,14 @@ const _b = UnidadeResumo(
 );
 const _c = UnidadeResumo(id: 3, nome: 'Unidade C', tempoEspera: 90);
 
+/// A mesma unidade B, depois de a fila crescer.
+const _bMaisLenta = UnidadeResumo(
+  id: 2,
+  nome: 'Unidade B',
+  bairro: 'Vila Nova',
+  tempoEspera: 120,
+);
+
 /// Abre a aba Home numa tela de 390 x 844 (o tamanho do Figma), com as
 /// animações desligadas. Por padrão espera tudo carregar; para ver o
 /// "carregando", passe `esperar: false`.
@@ -116,6 +130,7 @@ Future<void> abrirHome(
   VoidCallback? aoVerTodasAsUnidades,
   DateTime Function()? agora,
   bool esperar = true,
+  bool ativa = true,
 }) async {
   tester.view.physicalSize = const Size(390 * 3, 844 * 3);
   tester.view.devicePixelRatio = 3;
@@ -137,6 +152,7 @@ Future<void> abrirHome(
                 unidades: unidades ?? _UnidadesFalso([[_b]]),
                 favoritas: favoritas ?? _FavoritasFalso(),
                 agora: agora,
+                ativa: ativa,
               ),
             ),
           ),
@@ -365,5 +381,52 @@ void main() {
       find.text('Não consegui salvar a favorita. Tente de novo.'),
       findsOneWidget,
     );
+  });
+
+  group('atualização automática', () {
+    double? espera(WidgetTester tester) => tester
+        .widget<NexaUnidadeCard>(find.byType(NexaUnidadeCard))
+        .tempoEspera;
+
+    testWidgets('traz o tempo novo sozinho, a cada 20 segundos', (
+      tester,
+    ) async {
+      final unidades = _UnidadesFalso([
+        [_b],
+        [_bMaisLenta],
+      ]);
+      await abrirHome(tester, unidades: unidades);
+      expect(espera(tester), 40);
+
+      // Ainda não deu o tempo: nenhuma chamada nova.
+      await tester.pump(const Duration(seconds: 10));
+      expect(unidades.chamadas, 1);
+
+      await tester.pump(const Duration(seconds: 11));
+      await tester.pump();
+
+      expect(unidades.chamadas, 2);
+      expect(espera(tester), 120);
+      expect(find.byType(NexaUnidadeCardCarregando), findsNothing);
+    });
+
+    testWidgets('fora da aba não consulta; ao voltar, atualiza na hora', (
+      tester,
+    ) async {
+      final unidades = _UnidadesFalso([
+        [_b],
+        [_bMaisLenta],
+      ]);
+      await abrirHome(tester, unidades: unidades, ativa: false);
+      expect(unidades.chamadas, 1);
+
+      await tester.pump(const Duration(seconds: 90));
+      expect(unidades.chamadas, 1);
+
+      await abrirHome(tester, unidades: unidades);
+
+      expect(unidades.chamadas, 2);
+      expect(espera(tester), 120);
+    });
   });
 }

@@ -11,6 +11,7 @@ import 'package:fe_nexa_app/features/unidades/data/favoritas_repository.dart';
 import 'package:fe_nexa_app/features/unidades/data/unidade_resumo.dart';
 import 'package:fe_nexa_app/features/unidades/nexa_unidade_card.dart';
 import 'package:fe_nexa_app/features/unidades/unidade_detalhe_page.dart';
+import 'package:fe_nexa_app/shared/utils/atualizador_periodico.dart';
 import 'package:fe_nexa_app/shared/utils/espera.dart';
 import 'package:fe_nexa_app/shared/widgets/guia_view.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_banner.dart';
@@ -33,6 +34,7 @@ class AbaFavoritas extends StatefulWidget {
     this.favoritas,
     this.lista,
     this.localizacao,
+    this.ativa = true,
   });
 
   final bool temConta;
@@ -44,6 +46,10 @@ class AbaFavoritas extends StatefulWidget {
   final FavoritasRepository? favoritas;
   final FavoritasLista? lista;
   final LocalizacaoService? localizacao;
+
+  /// A aba está na frente? Fora dela a atualização periódica pausa e, ao
+  /// voltar, atualiza na hora.
+  final bool ativa;
 
   @override
   State<AbaFavoritas> createState() => _AbaFavoritasState();
@@ -59,15 +65,32 @@ class _AbaFavoritasState extends State<AbaFavoritas> {
   bool _carregando = true;
   _Falha? _falha;
 
+  /// Última posição do GPS. A atualização periódica reaproveita esta, para não
+  /// acordar o GPS a cada rodada.
+  Posicao? _ultimaPosicao;
+
+  late final AtualizadorPeriodico _atualizador = AtualizadorPeriodico(
+    nome: 'Favoritas',
+    atualizar: _atualizarEmSilencio,
+  );
+
   @override
   void initState() {
     super.initState();
     _repoFavoritas.ids.addListener(_favoritasMudaram);
     unawaited(_iniciar());
+    if (widget.ativa) _atualizador.iniciar();
+  }
+
+  @override
+  void didUpdateWidget(AbaFavoritas antigo) {
+    super.didUpdateWidget(antigo);
+    if (widget.ativa != antigo.ativa) _atualizador.definirAtivo(widget.ativa);
   }
 
   @override
   void dispose() {
+    _atualizador.parar();
     _repoFavoritas.ids.removeListener(_favoritasMudaram);
     super.dispose();
   }
@@ -116,17 +139,22 @@ class _AbaFavoritasState extends State<AbaFavoritas> {
     }
   }
 
-  Future<Posicao?> _posicaoOpcional() async {
+  /// Com [reaproveitar], devolve a última posição conhecida (ou nulo) sem
+  /// perguntar ao GPS.
+  Future<Posicao?> _posicaoOpcional({bool reaproveitar = false}) async {
     if (!widget.temConta) return null;
+    if (reaproveitar) return _ultimaPosicao;
     try {
-      return await _repoGps.posicaoAtual();
+      final posicao = await _repoGps.posicaoAtual();
+      _ultimaPosicao = posicao;
+      return posicao;
     } catch (_) {
       return null;
     }
   }
 
   Future<void> _carregarUnidades({bool silencioso = false}) async {
-    final posicao = await _posicaoOpcional();
+    final posicao = await _posicaoOpcional(reaproveitar: silencioso);
     try {
       final lista = await _repoLista.carregarUnidades(
         latitude: posicao?.latitude,
@@ -167,6 +195,9 @@ class _AbaFavoritasState extends State<AbaFavoritas> {
     }
     await _carregarUnidades(silencioso: silencioso);
   }
+
+  /// Atualização periódica: refaz a busca sem esqueleto e sem aviso de erro.
+  Future<void> _atualizarEmSilencio() => _recarregar(silencioso: true);
 
   Future<void> _remover(UnidadeResumo unidade) async {
     try {

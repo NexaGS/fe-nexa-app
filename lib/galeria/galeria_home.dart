@@ -116,6 +116,9 @@ class _UnidadesDoCenario implements UnidadesRepository {
         return const [];
     }
   }
+
+  @override
+  Future<UnidadeResumo> porId(int id) => throw const SemConexao();
 }
 
 /// Favoritas só na memória: somem quando a galeria fecha.

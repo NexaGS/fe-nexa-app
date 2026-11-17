@@ -1,20 +1,20 @@
 import 'dart:async';
 
 import 'package:fe_nexa_app/app/theme/nexa_colors.dart';
-import 'package:fe_nexa_app/app/theme/nexa_text.dart';
 import 'package:fe_nexa_app/app/theme/nexa_tokens.dart';
 import 'package:fe_nexa_app/features/unidades/data/acoes_unidade.dart';
 import 'package:fe_nexa_app/features/unidades/data/favoritas_repository.dart';
 import 'package:fe_nexa_app/features/unidades/data/unidade_resumo.dart';
-import 'package:fe_nexa_app/features/unidades/nexa_folha_espera.dart';
+import 'package:fe_nexa_app/features/unidades/data/unidades_repository.dart';
 import 'package:fe_nexa_app/features/unidades/nexa_linha_info.dart';
+import 'package:fe_nexa_app/features/unidades/widgets/ao_chegar.dart';
+import 'package:fe_nexa_app/features/unidades/widgets/barra_de_acoes.dart';
+import 'package:fe_nexa_app/features/unidades/widgets/cartao_de_espera.dart';
+import 'package:fe_nexa_app/shared/utils/atualizador_periodico.dart';
 import 'package:fe_nexa_app/shared/utils/espera.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_app_bar.dart';
-import 'package:fe_nexa_app/shared/widgets/nexa_button.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_cartao.dart';
-import 'package:fe_nexa_app/shared/widgets/nexa_espera_chip.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_favorito_button.dart';
-import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_snackbar.dart';
 import 'package:flutter/material.dart';
 
@@ -23,10 +23,15 @@ Future<void> abrirDetalheDaUnidade(
   BuildContext context,
   UnidadeResumo unidade, {
   FavoritasRepository? favoritas,
+  UnidadesRepository? unidades,
 }) {
   return Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (_) => UnidadeDetalhePage(unidade: unidade, favoritas: favoritas),
+      builder: (_) => UnidadeDetalhePage(
+        unidade: unidade,
+        favoritas: favoritas,
+        unidades: unidades,
+      ),
     ),
   );
 }
@@ -39,11 +44,13 @@ class UnidadeDetalhePage extends StatefulWidget {
     required this.unidade,
     this.favoritas,
     this.acoes,
+    this.unidades,
   });
 
   final UnidadeResumo unidade;
   final FavoritasRepository? favoritas;
   final AcoesUnidade? acoes;
+  final UnidadesRepository? unidades;
 
   @override
   State<UnidadeDetalhePage> createState() => _UnidadeDetalhePageState();
@@ -52,9 +59,37 @@ class UnidadeDetalhePage extends StatefulWidget {
 class _UnidadeDetalhePageState extends State<UnidadeDetalhePage> {
   FavoritasRepository get _repoFavoritas =>
       widget.favoritas ?? favoritasRepository;
+  UnidadesRepository get _repoUnidades => widget.unidades ?? unidadesRepository;
   AcoesUnidade get _acoes => widget.acoes ?? acoesUnidade;
 
   UnidadeResumo get _unidade => widget.unidade;
+
+  // Só a espera muda com o tempo. A distância vem da Home e fica como está,
+  // porque `/{id}` não manda `distanciaKm`.
+  late double? _tempoEspera = widget.unidade.tempoEspera;
+
+  late final AtualizadorPeriodico _atualizador = AtualizadorPeriodico(
+    nome: 'Detalhe',
+    atualizar: _atualizarEspera,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _atualizador.iniciar();
+  }
+
+  @override
+  void dispose() {
+    _atualizador.parar();
+    super.dispose();
+  }
+
+  Future<void> _atualizarEspera() async {
+    final atual = await _repoUnidades.porId(widget.unidade.id);
+    if (!mounted) return;
+    setState(() => _tempoEspera = atual.tempoEspera ?? _tempoEspera);
+  }
 
   Future<void> _alternarFavorita() async {
     final vaiFavoritar = !_repoFavoritas.ids.value.contains(_unidade.id);
@@ -93,7 +128,7 @@ class _UnidadeDetalhePageState extends State<UnidadeDetalhePage> {
 
   String _textoParaCompartilhar() {
     final endereco = _unidade.endereco;
-    final espera = _unidade.tempoEspera;
+    final espera = _tempoEspera;
     final destino = _unidade.enderecoParaRota;
     return [
       _unidade.nome,
@@ -142,7 +177,7 @@ class _UnidadeDetalhePageState extends State<UnidadeDetalhePage> {
           NexaSpacing.md,
         ),
         children: [
-          _CartaoDeEspera(tempoEspera: _unidade.tempoEspera),
+          CartaoDeEspera(tempoEspera: _tempoEspera),
           if (linhas.isNotEmpty) ...[
             const SizedBox(height: NexaSpacing.sm),
             NexaCartao(
@@ -166,210 +201,12 @@ class _UnidadeDetalhePageState extends State<UnidadeDetalhePage> {
             ),
           ],
           const SizedBox(height: NexaSpacing.sm),
-          const _AoChegar(),
+          const AoChegar(),
         ],
       ),
-      bottomNavigationBar: _BarraDeAcoes(
+      bottomNavigationBar: BarraDeAcoes(
         aoComoChegar: () => unawaited(_comoChegar()),
         aoCompartilhar: () => unawaited(_compartilhar()),
-      ),
-    );
-  }
-}
-
-/// O bloco verde-claro do alto: espera estimada, selo da faixa e aviso da
-/// triagem.
-class _CartaoDeEspera extends StatelessWidget {
-  const _CartaoDeEspera({required this.tempoEspera});
-
-  final double? tempoEspera;
-
-  @override
-  Widget build(BuildContext context) {
-    final minutos = tempoEspera;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: NexaColors.cream,
-        borderRadius: BorderRadius.circular(NexaRadius.card),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(NexaSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Espera estimada',
-              style: NexaText.small.copyWith(color: NexaColors.inkSoft),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              minutos == null
-                  ? 'Estimativa indisponível'
-                  : textoCurtoDaEspera(minutos),
-              style: minutos == null
-                  ? NexaText.title.copyWith(color: NexaColors.inkSoft)
-                  : NexaText.bigNumber.copyWith(letterSpacing: -1.32),
-            ),
-            const SizedBox(height: 10),
-            NexaEsperaChip(nivel: nivelDaEspera(minutos)),
-            const SizedBox(height: NexaSpacing.sm),
-            const Divider(height: 1, thickness: 1, color: NexaColors.lime),
-            const SizedBox(height: NexaSpacing.sm),
-            const Text(
-              'A triagem define a ordem de atendimento. Por isso a sua espera '
-              'pode ser maior ou menor.',
-              style: NexaText.small,
-            ),
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: NexaButton(
-                label: 'Como calculamos?',
-                iconName: 'help',
-                variant: NexaButtonVariant.link,
-                onPressed: () => unawaited(mostrarFolhaEspera(context)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// "Ao chegar": os três passos de quem chega à unidade.
-class _AoChegar extends StatelessWidget {
-  const _AoChegar();
-
-  @override
-  Widget build(BuildContext context) {
-    return const NexaCartao(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          NexaSpacing.md,
-          NexaSpacing.md,
-          NexaSpacing.md,
-          NexaSpacing.xs,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Ao chegar', style: NexaText.section),
-            _Passo(
-              iconName: 'user_check',
-              numero: 1,
-              texto: 'Faça o check-in no totem',
-            ),
-            _Passo(iconName: 'ticket', numero: 2, texto: 'Receba sua senha'),
-            _Passo(
-              iconName: 'monitor',
-              numero: 3,
-              texto: 'Acompanhe a chamada no painel',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Passo extends StatelessWidget {
-  const _Passo({
-    required this.iconName,
-    required this.numero,
-    required this.texto,
-  });
-
-  final String iconName;
-  final int numero;
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 56),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Row(
-          spacing: NexaSpacing.sm,
-          children: [
-            DecoratedBox(
-              decoration: const BoxDecoration(
-                color: NexaColors.primrose,
-                shape: BoxShape.circle,
-              ),
-              child: SizedBox.square(
-                dimension: 44,
-                child: Center(child: NexaIcon(iconName)),
-              ),
-            ),
-            Expanded(
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '$numero.',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    TextSpan(text: ' $texto'),
-                  ],
-                ),
-                style: NexaText.bodyMedium,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A barra fixa de baixo: "Como chegar" e "Compartilhar".
-class _BarraDeAcoes extends StatelessWidget {
-  const _BarraDeAcoes({
-    required this.aoComoChegar,
-    required this.aoCompartilhar,
-  });
-
-  final VoidCallback aoComoChegar;
-  final VoidCallback aoCompartilhar;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: NexaColors.white,
-        border: Border(top: BorderSide(color: NexaColors.divider)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.all(NexaSpacing.sm).copyWith(
-            left: NexaSpacing.md,
-            right: NexaSpacing.md,
-          ),
-          child: Row(
-            spacing: NexaSpacing.sm,
-            children: [
-              Expanded(
-                child: NexaButton(
-                  label: 'Como chegar',
-                  iconName: 'navigation',
-                  onPressed: aoComoChegar,
-                ),
-              ),
-              Expanded(
-                child: NexaButton(
-                  label: 'Compartilhar',
-                  iconName: 'share',
-                  variant: NexaButtonVariant.outline,
-                  onPressed: aoCompartilhar,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
