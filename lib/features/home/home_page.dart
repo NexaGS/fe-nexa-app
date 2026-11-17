@@ -22,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   /// Posição de "Buscar" em [NexaBottomNav].
   static const _abaHome = 0;
   static const _abaBuscar = 1;
+  static const _abaFavoritas = 2;
 
   int _aba = 0;
 
@@ -30,11 +31,13 @@ class _HomePageState extends State<HomePage> {
     final abas = [
       AbaHome(
         nome: widget.sessao?.nome,
+        ativa: _aba == _abaHome,
         aoVerTodasAsUnidades: () => setState(() => _aba = _abaBuscar),
       ),
-      const AbaBuscar(),
+      AbaBuscar(ativa: _aba == _abaBuscar),
       AbaFavoritas(
         temConta: widget.sessao != null,
+        ativa: _aba == _abaFavoritas,
         aoVerUnidades: () => setState(() => _aba = _abaHome),
         aoCriarConta: () =>
             Navigator.of(context).popUntil((rota) => rota.isFirst),

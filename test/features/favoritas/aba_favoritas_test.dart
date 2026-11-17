@@ -15,9 +15,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 
 class _GpsFalso implements LocalizacaoService {
+  /// Quantas vezes o GPS foi consultado.
+  int consultas = 0;
+
   @override
-  Future<Posicao> posicaoAtual() async =>
-      const Posicao(latitude: -23.56, longitude: -46.65);
+  Future<Posicao> posicaoAtual() async {
+    consultas++;
+    return const Posicao(latitude: -23.56, longitude: -46.65);
+  }
 
   @override
   Future<void> abrirAjustesDoGps() async {}
@@ -74,6 +79,31 @@ class _ListaFalsa implements FavoritasLista {
   }
 }
 
+/// Um Java que muda de ideia: a lista e a falha podem ser trocadas no meio do
+/// teste, para ver o que a tela faz na rodada seguinte.
+class _ListaQueMuda implements FavoritasLista {
+  _ListaQueMuda(this.unidades);
+
+  List<UnidadeResumo> unidades;
+  Exception? falha;
+  int chamadas = 0;
+
+  @override
+  Future<List<UnidadeResumo>> carregarUnidades({
+    double? latitude,
+    double? longitude,
+  }) async {
+    chamadas++;
+    final erro = falha;
+    if (erro != null) throw erro;
+    return unidades;
+  }
+
+  @override
+  Future<UnidadeResumo?> carregarUnidade(int id) async =>
+      unidades.where((u) => u.id == id).firstOrNull;
+}
+
 const _a = UnidadeResumo(
   id: 1,
   nome: 'Unidade A',
@@ -88,6 +118,14 @@ const _b = UnidadeResumo(
 );
 const _c = UnidadeResumo(id: 3, nome: 'Unidade C', tempoEspera: 90);
 
+/// A mesma unidade B, depois de a fila crescer.
+const _bMaisLenta = UnidadeResumo(
+  id: 2,
+  nome: 'Unidade B',
+  bairro: 'Vila Nova',
+  tempoEspera: 120,
+);
+
 Future<void> abrir(
   WidgetTester tester, {
   required FavoritasRepository favoritas,
@@ -96,6 +134,8 @@ Future<void> abrir(
   VoidCallback? aoVerUnidades,
   VoidCallback? aoCriarConta,
   bool esperar = true,
+  bool ativa = true,
+  _GpsFalso? gps,
 }) async {
   tester.view.physicalSize = const Size(390 * 3, 844 * 3);
   tester.view.devicePixelRatio = 3;
@@ -115,7 +155,8 @@ Future<void> abrir(
                 aoCriarConta: aoCriarConta,
                 favoritas: favoritas,
                 lista: lista,
-                localizacao: _GpsFalso(),
+                localizacao: gps ?? _GpsFalso(),
+                ativa: ativa,
               ),
             ),
           ),
@@ -315,6 +356,75 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(NexaUnidadeCard), findsNWidgets(3));
     expect(find.text('3 unidades'), findsOneWidget);
+  });
+
+  group('atualização automática', () {
+    double? espera(WidgetTester tester) => tester
+        .widget<NexaUnidadeCard>(find.byType(NexaUnidadeCard))
+        .tempoEspera;
+
+    testWidgets('traz o tempo novo sozinho, sem esqueleto e sem GPS', (
+      tester,
+    ) async {
+      final lista = _ListaQueMuda([_b]);
+      final gps = _GpsFalso();
+      await abrir(
+        tester,
+        favoritas: _FavoritasFalso({2}),
+        lista: lista,
+        gps: gps,
+      );
+      expect(espera(tester), 40);
+
+      lista.unidades = [_bMaisLenta];
+      await tester.pump(const Duration(seconds: 20));
+      await tester.pump();
+
+      expect(espera(tester), 120);
+      expect(lista.chamadas, 2);
+      expect(find.byType(NexaUnidadeCardCarregando), findsNothing);
+      // Só a primeira carga pergunta onde a pessoa está.
+      expect(gps.consultas, 1);
+    });
+
+    testWidgets('se falhar, mantém a lista, não avisa e tenta de novo', (
+      tester,
+    ) async {
+      final lista = _ListaQueMuda([_b]);
+      await abrir(tester, favoritas: _FavoritasFalso({2}), lista: lista);
+
+      lista.falha = const SemConexao();
+      await tester.pump(const Duration(seconds: 20));
+      await tester.pump();
+      expect(lista.chamadas, 2);
+      expect(espera(tester), 40);
+      expect(find.text('Não consegui atualizar agora.'), findsNothing);
+
+      lista
+        ..falha = null
+        ..unidades = [_bMaisLenta];
+      await tester.pump(const Duration(seconds: 20));
+      await tester.pump();
+      expect(espera(tester), 120);
+    });
+
+    testWidgets('fora da aba não consulta; ao voltar, atualiza na hora', (
+      tester,
+    ) async {
+      final lista = _ListaQueMuda([_b]);
+      final favoritas = _FavoritasFalso({2});
+      await abrir(tester, favoritas: favoritas, lista: lista, ativa: false);
+      expect(lista.chamadas, 1);
+
+      await tester.pump(const Duration(seconds: 90));
+      expect(lista.chamadas, 1);
+
+      lista.unidades = [_bMaisLenta];
+      await abrir(tester, favoritas: favoritas, lista: lista);
+
+      expect(lista.chamadas, 2);
+      expect(espera(tester), 120);
+    });
   });
 }
 

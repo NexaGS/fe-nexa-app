@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show max, min;
 
 import 'package:fe_nexa_app/app/theme/nexa_colors.dart';
 import 'package:fe_nexa_app/app/theme/nexa_text.dart';
@@ -14,6 +15,7 @@ import 'package:fe_nexa_app/features/unidades/data/favoritas_repository.dart';
 import 'package:fe_nexa_app/features/unidades/data/unidade_resumo.dart';
 import 'package:fe_nexa_app/features/unidades/nexa_unidade_card.dart';
 import 'package:fe_nexa_app/features/unidades/unidade_detalhe_page.dart';
+import 'package:fe_nexa_app/shared/utils/atualizador_periodico.dart';
 import 'package:fe_nexa_app/shared/widgets/guia_view.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_button.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_estado_vazio.dart';
@@ -32,6 +34,10 @@ const double _espacoEntreCartoes = 14;
 /// próxima página. Assim ela chega antes de a pessoa bater no fim.
 const double _distanciaParaCarregarMais = 600;
 
+/// O Java aceita no máximo 100 unidades por página (`@Max(100)`). A atualização
+/// periódica usa esse teto para refazer a lista com poucas chamadas.
+const int _maximoPorPagina = 100;
+
 /// Aba Buscar: o catálogo de todas as unidades cadastradas.
 class AbaBuscar extends StatefulWidget {
   const AbaBuscar({
@@ -40,6 +46,7 @@ class AbaBuscar extends StatefulWidget {
     this.favoritas,
     this.tamanhoDaPagina = 10,
     this.atrasoDaDigitacao = const Duration(milliseconds: 400),
+    this.ativa = true,
   });
 
   final CatalogoRepository? catalogo;
@@ -51,6 +58,10 @@ class AbaBuscar extends StatefulWidget {
   /// Quanto esperar depois da última letra antes de buscar. Sem esperar, cada
   /// letra faria uma chamada ao Java.
   final Duration atrasoDaDigitacao;
+
+  /// A aba está na frente? Fora dela a atualização periódica pausa e, ao
+  /// voltar, atualiza na hora.
+  final bool ativa;
 
   @override
   State<AbaBuscar> createState() => _AbaBuscarState();
@@ -88,16 +99,30 @@ class _AbaBuscarState extends State<AbaBuscar> {
   /// digita rápido veria a lista do texto antigo por cima da do texto novo.
   int _busca = 0;
 
+  late final AtualizadorPeriodico _atualizador = AtualizadorPeriodico(
+    nome: 'Buscar',
+    atualizar: _atualizarEmSilencio,
+    intervalo: const Duration(seconds: 30),
+  );
+
   @override
   void initState() {
     super.initState();
     _rolagem.addListener(_aoRolar);
     unawaited(_repoFavoritas.carregar());
     unawaited(_carregarPrimeiraPagina());
+    if (widget.ativa) _atualizador.iniciar();
+  }
+
+  @override
+  void didUpdateWidget(AbaBuscar antigo) {
+    super.didUpdateWidget(antigo);
+    if (widget.ativa != antigo.ativa) _atualizador.definirAtivo(widget.ativa);
   }
 
   @override
   void dispose() {
+    _atualizador.parar();
     _digitando?.cancel();
     _rolagem
       ..removeListener(_aoRolar)
@@ -196,6 +221,57 @@ class _AbaBuscarState extends State<AbaBuscar> {
     setState(() {
       _carregandoMais = false;
       _falhouAoCarregarMais = true;
+    });
+  }
+
+  /// Atualização periódica: refaz, sem piscar a tela, as unidades que já estão
+  /// na lista, para o tempo de espera dos cartões acompanhar o servidor.
+  ///
+  /// Pede em páginas grandes (até [_maximoPorPagina]), então uma lista de 30
+  /// unidades custa uma chamada só. Se a pessoa mexeu na lista no meio do
+  /// caminho (filtro novo, mais uma página), a resposta é jogada fora e a
+  /// próxima rodada refaz.
+  Future<void> _atualizarEmSilencio() async {
+    if (_carregandoPrimeira || _carregandoMais || _falhaPrimeira != null) {
+      return;
+    }
+    final busca = _busca;
+    final quantas = _itens.length;
+    // Lista inteira na tela: pede tudo de novo, para pegar também as unidades
+    // que entraram depois e ela continuar "inteira".
+    final tinhaTudo = _ultima;
+    final tamanho = min(max(quantas, widget.tamanhoDaPagina), _maximoPorPagina);
+
+    final recebidas = <UnidadeResumo>[];
+    var total = 0;
+    for (var pagina = 0; ; pagina++) {
+      final resposta = await _repo.pagina(
+        nome: _nome,
+        uf: _uf,
+        pagina: pagina,
+        tamanho: tamanho,
+      );
+      if (!mounted ||
+          busca != _busca ||
+          _carregandoPrimeira ||
+          _carregandoMais ||
+          _itens.length != quantas) {
+        return;
+      }
+      recebidas.addAll(resposta.unidades);
+      total = resposta.totalElementos;
+      if (resposta.unidades.isEmpty ||
+          resposta.ultima ||
+          (!tinhaTudo && recebidas.length >= quantas)) {
+        break;
+      }
+    }
+
+    final novas = tinhaTudo ? recebidas : recebidas.take(quantas).toList();
+    setState(() {
+      _itens = novas;
+      _total = total;
+      _ultima = novas.length >= total;
     });
   }
 

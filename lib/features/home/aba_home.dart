@@ -2,31 +2,24 @@ import 'dart:async';
 
 import 'package:fe_nexa_app/app/theme/nexa_colors.dart';
 import 'package:fe_nexa_app/app/theme/nexa_text.dart';
-import 'package:fe_nexa_app/app/theme/nexa_tokens.dart';
 import 'package:fe_nexa_app/features/auth/data/auth_repository.dart'
     show ErroInesperado, SemConexao;
 import 'package:fe_nexa_app/features/home/data/local_repository.dart';
 import 'package:fe_nexa_app/features/home/data/localizacao_service.dart';
+import 'package:fe_nexa_app/features/home/widgets/aviso_triagem.dart';
+import 'package:fe_nexa_app/features/home/widgets/estado_home.dart';
+import 'package:fe_nexa_app/features/home/widgets/falha_unidades.dart';
+import 'package:fe_nexa_app/features/home/widgets/lista_carregando.dart';
+import 'package:fe_nexa_app/features/home/widgets/lista_unidades.dart';
 import 'package:fe_nexa_app/features/unidades/data/favoritas_repository.dart';
 import 'package:fe_nexa_app/features/unidades/data/unidade_resumo.dart';
 import 'package:fe_nexa_app/features/unidades/data/unidades_repository.dart';
-import 'package:fe_nexa_app/features/unidades/nexa_unidade_card.dart';
-import 'package:fe_nexa_app/features/unidades/unidade_detalhe_page.dart';
-import 'package:fe_nexa_app/shared/utils/tempo.dart';
+import 'package:fe_nexa_app/shared/utils/atualizador_periodico.dart';
 import 'package:fe_nexa_app/shared/widgets/guia_view.dart';
-import 'package:fe_nexa_app/shared/widgets/nexa_banner.dart';
-import 'package:fe_nexa_app/shared/widgets/nexa_estado_vazio.dart';
-import 'package:fe_nexa_app/shared/widgets/nexa_icon.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_local_atual.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_saudacao.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_snackbar.dart';
 import 'package:flutter/material.dart';
-
-/// Por que a lista de unidades não carregou.
-enum _Falha { servidor, semConexao }
-
-/// Espaço entre os cartões da lista, como no Figma.
-const double _espacoEntreCartoes = 14;
 
 /// Aba Home: saudação, local atual e a lista das unidades mais próximas.
 class AbaHome extends StatefulWidget {
@@ -39,6 +32,7 @@ class AbaHome extends StatefulWidget {
     this.unidades,
     this.favoritas,
     this.agora,
+    this.ativa = true,
   });
 
   /// Nome da pessoa para a saudação. Nulo = visitante.
@@ -56,6 +50,10 @@ class AbaHome extends StatefulWidget {
   /// O relógio da tela, para o "há 12 min". Nulo = a hora do celular.
   final DateTime Function()? agora;
 
+  /// A aba está na frente? Fora dela a atualização periódica pausa e, ao
+  /// voltar, atualiza na hora.
+  final bool ativa;
+
   @override
   State<AbaHome> createState() => _AbaHomeState();
 }
@@ -67,6 +65,11 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
   FavoritasRepository get _repoFavoritas =>
       widget.favoritas ?? favoritasRepository;
   DateTime _agora() => (widget.agora ?? DateTime.now)();
+
+  late final AtualizadorPeriodico _atualizador = AtualizadorPeriodico(
+    nome: 'Home',
+    atualizar: _atualizarEmSilencio,
+  );
 
   bool _buscandoLocal = true;
   String? _local;
@@ -81,7 +84,7 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
   // mesmo que uma nova busca falhe: é o que a tela mostra "sem internet".
   List<UnidadeResumo>? _unidades;
   bool _carregandoUnidades = true;
-  _Falha? _falha;
+  FalhaUnidades? _falha;
   DateTime? _atualizadoEm;
 
   @override
@@ -90,10 +93,18 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _carregarFavoritas();
     _iniciar();
+    if (widget.ativa) _atualizador.iniciar();
+  }
+
+  @override
+  void didUpdateWidget(AbaHome antigo) {
+    super.didUpdateWidget(antigo);
+    if (widget.ativa != antigo.ativa) _atualizador.definirAtivo(widget.ativa);
   }
 
   @override
   void dispose() {
+    _atualizador.parar();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -217,18 +228,25 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
         _carregandoUnidades = false;
       });
     } on SemConexao {
-      _unidadesFalharam(_Falha.semConexao);
+      _unidadesFalharam(FalhaUnidades.semConexao);
     } on ErroInesperado {
-      _unidadesFalharam(_Falha.servidor);
+      _unidadesFalharam(FalhaUnidades.servidor);
     }
   }
 
-  void _unidadesFalharam(_Falha falha) {
+  void _unidadesFalharam(FalhaUnidades falha) {
     if (!mounted) return;
     setState(() {
       _falha = falha;
       _carregandoUnidades = false;
     });
+  }
+
+  /// Atualização periódica: refaz a busca sem mexer na tela de carregando.
+  Future<void> _atualizarEmSilencio() async {
+    final posicao = _posicao;
+    if (posicao == null || _carregandoUnidades || _buscandoLocal) return;
+    await _carregarUnidades(posicao);
   }
 
   /// "Tentar de novo" e puxar a lista para baixo. Devolve o [Future] para o
@@ -303,7 +321,7 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
             ),
           ),
           Expanded(child: _conteudo()),
-          const _AvisoTriagem(),
+          const AvisoTriagem(),
         ],
       ),
     );
@@ -313,16 +331,27 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
   Widget _conteudo() {
     final unidades = _unidades;
     if (unidades != null) {
-      return unidades.isEmpty ? _semUnidades() : _lista(unidades);
+      return unidades.isEmpty
+          ? _semUnidades()
+          : ListaUnidades(
+              unidades: unidades,
+              favoritas: _repoFavoritas,
+              carregando: _carregandoUnidades,
+              aoRecarregar: _recarregar,
+              aoAlternarFavorita: _alternarFavorita,
+              agora: _agora,
+              falha: _falha,
+              atualizadoEm: _atualizadoEm,
+            );
     }
 
     if (_semPosicao) return _semLocalizacaoNaTela();
 
     final falha = _falha;
-    if (_carregandoUnidades || falha == null) return const _ListaCarregando();
+    if (_carregandoUnidades || falha == null) return const ListaCarregando();
 
     return switch (falha) {
-      _Falha.semConexao => _estado(
+      FalhaUnidades.semConexao => EstadoHome(
         mood: GuiaMood.erro,
         rotuloDoGuia: 'Guia do Nexa preocupado',
         titulo: 'Sem conexão com a internet',
@@ -331,7 +360,7 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
         iconeAcao: 'refresh',
         aoAcionar: _recarregar,
       ),
-      _Falha.servidor => _estado(
+      FalhaUnidades.servidor => EstadoHome(
         mood: GuiaMood.erro,
         rotuloDoGuia: 'Guia do Nexa preocupado',
         titulo: 'Algo deu errado do nosso lado',
@@ -345,7 +374,7 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
     };
   }
 
-  Widget _semUnidades() => _estado(
+  Widget _semUnidades() => EstadoHome(
     mood: GuiaMood.vazio,
     rotuloDoGuia: 'Guia do Nexa procurando',
     titulo: 'Não achamos unidades perto daqui',
@@ -359,7 +388,7 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
 
   /// Sem GPS não há "perto daqui": o caminho é ligar a localização ou olhar a
   /// lista de todas as unidades.
-  Widget _semLocalizacaoNaTela() => _estado(
+  Widget _semLocalizacaoNaTela() => EstadoHome(
     mood: GuiaMood.vazio,
     rotuloDoGuia: 'Guia do Nexa procurando',
     titulo: 'Não sabemos onde você está',
@@ -370,182 +399,4 @@ class _AbaHomeState extends State<AbaHome> with WidgetsBindingObserver {
     iconeAcao: 'search',
     aoAcionar: _verTodasAsUnidades,
   );
-
-  /// Guia, título, texto e botão no meio da área da lista. Rola se a letra
-  /// estiver grande demais para caber.
-  Widget _estado({
-    required GuiaMood mood,
-    required String rotuloDoGuia,
-    required String titulo,
-    required String texto,
-    required String rotuloAcao,
-    required String iconeAcao,
-    required VoidCallback aoAcionar,
-  }) {
-    return Center(
-      child: SingleChildScrollView(
-        // 16 da tela + 8 = os 24 de margem do Figma.
-        padding: const EdgeInsets.symmetric(horizontal: NexaSpacing.xs),
-        child: NexaEstadoVazio(
-          mood: mood,
-          rotuloDoGuia: rotuloDoGuia,
-          titulo: titulo,
-          texto: texto,
-          rotuloAcao: rotuloAcao,
-          iconeAcao: iconeAcao,
-          aoAcionar: aoAcionar,
-        ),
-      ),
-    );
-  }
-
-  Widget _lista(List<UnidadeResumo> unidades) {
-    final falha = _falha;
-    final atualizadoEm = _atualizadoEm;
-    // Só o espaço de cima usa este bool. O `if` abaixo repete a condição de
-    // propósito: o Dart só promove `atualizadoEm` a não nulo dentro dele.
-    final mostraAviso = falha != null && atualizadoEm != null;
-    final indiceDoSelo = indiceDaMenorEspera(unidades);
-
-    return Column(
-      children: [
-        if (falha != null && atualizadoEm != null)
-          Padding(
-            padding: const EdgeInsets.only(top: NexaSpacing.sm),
-            child: NexaBanner(
-              mensagem:
-                  'Mostrando dados de '
-                  '${textoHaQuantoTempo(_agora().difference(atualizadoEm))}',
-              // O ícone padrão do banner é o de "sem internet": só serve
-              // quando o problema é mesmo a conexão.
-              iconName: falha == _Falha.servidor ? 'alert' : null,
-              rotuloAcao: _carregandoUnidades ? null : 'Tentar de novo',
-              aoAcionar: _carregandoUnidades ? null : _recarregar,
-            ),
-          ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _recarregar,
-            color: NexaColors.green,
-            backgroundColor: NexaColors.white,
-            child: ValueListenableBuilder<Set<int>>(
-              valueListenable: _repoFavoritas.ids,
-              builder: (context, favoritas, _) {
-                return ListView.separated(
-                  // Sempre "rolável", senão o puxar-para-atualizar não
-                  // funciona quando há poucas unidades.
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.only(
-                    top: mostraAviso ? NexaSpacing.sm : NexaSpacing.lg,
-                    bottom: NexaSpacing.md,
-                  ),
-                  itemCount: unidades.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: _espacoEntreCartoes),
-                  itemBuilder: (context, indice) {
-                    final unidade = unidades[indice];
-                    return NexaUnidadeCard(
-                      key: ValueKey(unidade.id),
-                      nome: unidade.nome,
-                      tempoEspera: unidade.tempoEspera,
-                      favorita: favoritas.contains(unidade.id),
-                      aoAlternarFavorita: () => _alternarFavorita(unidade),
-                      aoTocar: () => unawaited(
-                        abrirDetalheDaUnidade(
-                          context,
-                          unidade,
-                          favoritas: _repoFavoritas,
-                        ),
-                      ),
-                      detalhes: unidade.detalhes,
-                      menorEspera: indice == indiceDoSelo,
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// "Buscando unidades perto de você…" e três cartões esqueleto.
-class _ListaCarregando extends StatelessWidget {
-  const _ListaCarregando();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.only(top: NexaSpacing.lg),
-      children: const [
-        _BuscandoUnidades(),
-        SizedBox(height: _espacoEntreCartoes),
-        NexaUnidadeCardCarregando(),
-        SizedBox(height: _espacoEntreCartoes),
-        NexaUnidadeCardCarregando(),
-        SizedBox(height: _espacoEntreCartoes),
-        NexaUnidadeCardCarregando(),
-      ],
-    );
-  }
-}
-
-class _BuscandoUnidades extends StatelessWidget {
-  const _BuscandoUnidades();
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      liveRegion: true,
-      child: Row(
-        children: [
-          const ExcludeSemantics(
-            child: SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: NexaColors.green,
-                backgroundColor: NexaColors.divider,
-              ),
-            ),
-          ),
-          const SizedBox(width: NexaSpacing.sm),
-          Expanded(
-            child: Text('Buscando unidades perto de você…', style: NexaText.small),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Rodapé fixo da Home, como no Figma: a espera é uma estimativa e não decide
-/// quem é atendido primeiro.
-class _AvisoTriagem extends StatelessWidget {
-  const _AvisoTriagem();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: NexaSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 1),
-            child: NexaIcon('info', size: 14, color: NexaColors.inkSoft),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              'Estimativas podem mudar. A prioridade é definida pela triagem.',
-              style: NexaText.caption.copyWith(color: NexaColors.inkSoft),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

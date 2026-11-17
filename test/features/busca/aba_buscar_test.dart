@@ -74,6 +74,43 @@ class _CatalogoFalso implements CatalogoRepository {
   }
 }
 
+/// Um Java que muda de ideia: o tempo da primeira unidade e a quantidade de
+/// unidades podem ser trocados no meio do teste, para ver o que a tela faz na
+/// rodada seguinte.
+class _CatalogoQueMuda implements CatalogoRepository {
+  _CatalogoQueMuda(this.total);
+
+  int total;
+  double espera = 10;
+  final List<({int pagina, int tamanho})> pedidos = [];
+
+  @override
+  Future<PaginaDeUnidades> pagina({
+    String? nome,
+    String? uf,
+    int pagina = 0,
+    int tamanho = 10,
+  }) async {
+    pedidos.add((pagina: pagina, tamanho: tamanho));
+    final todas = [
+      for (var n = 1; n <= total; n++)
+        UnidadeResumo(
+          id: n,
+          nome: 'Unidade ${n.toString().padLeft(2, '0')}',
+          tempoEspera: n == 1 ? espera : 50,
+        ),
+    ];
+    final inicio = pagina * tamanho;
+    final fim = math.min(inicio + tamanho, todas.length);
+    return PaginaDeUnidades(
+      unidades: inicio >= todas.length ? const [] : todas.sublist(inicio, fim),
+      pagina: pagina,
+      totalElementos: todas.length,
+      ultima: fim >= todas.length,
+    );
+  }
+}
+
 /// Responde só quando o teste manda: serve para "carregando" e para conferir
 /// que a resposta velha é descartada.
 class _CatalogoManual implements CatalogoRepository {
@@ -123,6 +160,7 @@ Future<void> abrirBusca(
   CatalogoRepository? catalogo,
   FavoritasRepository? favoritas,
   bool esperar = true,
+  bool ativa = true,
 }) async {
   tester.view.physicalSize = const Size(390 * 3, 844 * 3);
   tester.view.devicePixelRatio = 3;
@@ -141,6 +179,7 @@ Future<void> abrirBusca(
                 favoritas: favoritas ?? _FavoritasFalso(),
                 tamanhoDaPagina: 10,
                 atrasoDaDigitacao: const Duration(milliseconds: 50),
+                ativa: ativa,
               ),
             ),
           ),
@@ -427,5 +466,77 @@ void main() {
     await tester.tap(find.byTooltip('Remover das favoritas: Unidade 01'));
     await tester.pumpAndSettle();
     expect(favoritas.ids.value, isEmpty);
+  });
+
+  group('atualização automática', () {
+    double? primeiraEspera(WidgetTester tester) => tester
+        .widgetList<NexaUnidadeCard>(find.byType(NexaUnidadeCard))
+        .first
+        .tempoEspera;
+
+    testWidgets('traz o tempo novo sozinho, sem voltar ao esqueleto', (
+      tester,
+    ) async {
+      final catalogo = _CatalogoQueMuda(3);
+      await abrirBusca(tester, catalogo: catalogo);
+      expect(primeiraEspera(tester), 10);
+
+      catalogo.espera = 75;
+      await tester.pump(const Duration(seconds: 30));
+      await tester.pump();
+
+      expect(primeiraEspera(tester), 75);
+      expect(find.byType(NexaUnidadeCardCarregando), findsNothing);
+      expect(catalogo.pedidos.length, 2);
+    });
+
+    testWidgets('refaz tudo o que já está na lista com uma chamada só', (
+      tester,
+    ) async {
+      final catalogo = _CatalogoQueMuda(25);
+      await abrirBusca(tester, catalogo: catalogo);
+      await rolarAte(tester, find.text('Unidade 25'));
+      await tester.pumpAndSettle();
+      final antes = catalogo.pedidos.length;
+
+      await tester.pump(const Duration(seconds: 30));
+      await tester.pump();
+
+      expect(catalogo.pedidos.length, antes + 1);
+      expect(catalogo.pedidos.last, (pagina: 0, tamanho: 25));
+      expect(find.text('Unidade 25'), findsOneWidget);
+    });
+
+    testWidgets('unidade nova no servidor entra na lista e no total', (
+      tester,
+    ) async {
+      final catalogo = _CatalogoQueMuda(3);
+      await abrirBusca(tester, catalogo: catalogo);
+      expect(find.text('3 unidades · em ordem alfabética'), findsOneWidget);
+
+      catalogo.total = 4;
+      await tester.pump(const Duration(seconds: 30));
+      await tester.pump();
+
+      expect(find.text('Unidade 04'), findsOneWidget);
+      expect(find.text('4 unidades · em ordem alfabética'), findsOneWidget);
+    });
+
+    testWidgets('fora da aba não consulta; ao voltar, atualiza na hora', (
+      tester,
+    ) async {
+      final catalogo = _CatalogoQueMuda(3);
+      await abrirBusca(tester, catalogo: catalogo, ativa: false);
+      expect(catalogo.pedidos.length, 1);
+
+      await tester.pump(const Duration(seconds: 90));
+      expect(catalogo.pedidos.length, 1);
+
+      catalogo.espera = 75;
+      await abrirBusca(tester, catalogo: catalogo);
+
+      expect(catalogo.pedidos.length, 2);
+      expect(primeiraEspera(tester), 75);
+    });
   });
 }

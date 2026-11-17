@@ -18,13 +18,16 @@ abstract interface class UnidadesRepository {
     required double longitude,
     int tamanho = 5,
   });
+
+  /// Uma unidade pelo id. A resposta não traz a distância, só os dados e a
+  /// espera atual.
+  Future<UnidadeResumo> porId(int id);
 }
 
 /// `GET /api/unidades/proximas?latitude=&longitude=&pagina=&tamanho=`
 /// -> 200 com `PageResponse<UnidadeSaudeResponse>` (a lista vem em `conteudo`).
 class UnidadesRepositoryHttp implements UnidadesRepository {
-  /// Em teste, passe um `MockClient` (de `package:http/testing.dart`) em
-  /// [cliente] para não depender da rede.
+
   UnidadesRepositoryHttp({required this.baseUrl, http.Client? cliente})
     : _cliente = cliente ?? http.Client();
 
@@ -64,6 +67,8 @@ class UnidadesRepositoryHttp implements UnidadesRepository {
     }
   }
 
+
+
   /// Faz o GET e traduz "não consegui falar com o servidor" em SemConexao.
   Future<http.Response> _buscar(Uri uri) async {
     try {
@@ -74,6 +79,22 @@ class UnidadesRepositoryHttp implements UnidadesRepository {
       throw const SemConexao();
     } on http.ClientException {
       throw const SemConexao();
+    }
+  }
+
+  @override
+  Future<UnidadeResumo> porId(int id) async {
+    final resposta = await _buscar(Uri.parse('$baseUrl/api/unidades/$id'));
+    if (resposta.statusCode != 200) throw const ErroInesperado();
+
+    try {
+      final json =
+      jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>;
+      return UnidadeResumo.fromJson(json);
+    } on FormatException {
+      throw const ErroInesperado();
+    } on TypeError {
+      throw const ErroInesperado();
     }
   }
 }
