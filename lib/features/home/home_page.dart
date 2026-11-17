@@ -1,8 +1,9 @@
-import 'package:fe_nexa_app/app/theme/nexa_text.dart';
 import 'package:fe_nexa_app/features/auth/data/auth_repository.dart';
 import 'package:fe_nexa_app/features/busca/aba_buscar.dart';
 import 'package:fe_nexa_app/features/favoritas/aba_favoritas.dart';
 import 'package:fe_nexa_app/features/home/aba_home.dart';
+import 'package:fe_nexa_app/features/inicio/inicio_page.dart';
+import 'package:fe_nexa_app/features/perfil/aba_perfil.dart';
 import 'package:fe_nexa_app/shared/widgets/nexa_bottom_nav.dart';
 import 'package:flutter/material.dart';
 
@@ -42,7 +43,19 @@ class _HomePageState extends State<HomePage> {
         aoCriarConta: () =>
             Navigator.of(context).popUntil((rota) => rota.isFirst),
       ),
-      const _AbaProvisoria('Perfil'),
+      AbaPerfil(
+        sessao: widget.sessao,
+        // O visitante entrou por cima do Início: voltar a ele leva às opções
+        // de entrar e criar conta.
+        aoEntrarOuCriarConta: () =>
+            Navigator.of(context).popUntil((rota) => rota.isFirst),
+        // Depois de sair, o Início vira a única tela: não dá para "voltar" à
+        // conta que acabou de ser encerrada.
+        aoSair: () => Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute<void>(builder: (_) => const InicioPage()),
+          (rota) => false,
+        ),
+      ),
     ];
 
     return Scaffold(
@@ -55,17 +68,5 @@ class _HomePageState extends State<HomePage> {
         aoSelecionar: (indice) => setState(() => _aba = indice),
       ),
     );
-  }
-}
-
-/// Texto no meio da tela, para as abas que ainda não existem.
-class _AbaProvisoria extends StatelessWidget {
-  const _AbaProvisoria(this.titulo);
-
-  final String titulo;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text(titulo, style: NexaText.title));
   }
 }

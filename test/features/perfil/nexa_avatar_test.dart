@@ -17,4 +17,12 @@ void main() {
 
     expect(find.byType(NexaIcon), findsOneWidget);
   });
+
+  testWidgets('visitante tem o ícone de pessoa maior (40 px)', (tester) async {
+    await tester.pumpWidget(
+      appDeTeste(const NexaAvatar(nome: null, visitante: true)),
+    );
+
+    expect(tester.widget<NexaIcon>(find.byType(NexaIcon)).size, 40);
+  });
 }

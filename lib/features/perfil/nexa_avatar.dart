@@ -8,9 +8,13 @@ import 'package:flutter/material.dart';
 /// Círculo com as iniciais do nome ("AS" para Ana Souza).
 /// Sem nome, mostra o ícone de pessoa.
 class NexaAvatar extends StatelessWidget {
-  const NexaAvatar({super.key, required this.nome});
+  const NexaAvatar({super.key, required this.nome, this.visitante = false});
 
   final String? nome;
+
+  /// Visitante: círculo cinza com borda e o ícone de pessoa maior, em vez do
+  /// verde-claro de quem tem conta.
+  final bool visitante;
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +25,13 @@ class NexaAvatar extends StatelessWidget {
         width: NexaSizes.avatar,
         height: NexaSizes.avatar,
         alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: NexaColors.primrose,
+        decoration: BoxDecoration(
+          color: visitante ? NexaColors.cardBorder : NexaColors.primrose,
           shape: BoxShape.circle,
+          border: visitante ? Border.all(color: NexaColors.divider) : null,
         ),
         child: iniciais.isEmpty
-            ? const NexaIcon('user', size: 32)
+            ? NexaIcon('user', size: visitante ? 40 : 32)
             : Text(iniciais, style: NexaText.display),
       ),
     );
