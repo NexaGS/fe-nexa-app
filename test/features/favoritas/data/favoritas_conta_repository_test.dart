@@ -151,10 +151,7 @@ void main() {
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
-      sessoes = SessaoService(
-        auth: AuthFalso(),
-        armazenamento: SessoesFalso(),
-      );
+      sessoes = SessaoService(armazenamento: SessoesFalso());
     });
 
     FavoritasRepositoryDaConta criar(_RemotasFalsas remotas) =>

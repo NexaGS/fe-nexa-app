@@ -1,31 +1,23 @@
-import 'dart:async';
-
-import 'package:fe_nexa_app/features/auth/data/auth_repository.dart';
 import 'package:fe_nexa_app/features/auth/data/sessao_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/fakes_auth.dart';
 
-SessaoService criar(AuthFalso auth, SessoesFalso armazenamento) =>
-    SessaoService(auth: auth, armazenamento: armazenamento);
+SessaoService criar(SessoesFalso armazenamento) =>
+    SessaoService(armazenamento: armazenamento);
 
 void main() {
-  late AuthFalso auth;
-
-  setUp(() => auth = AuthFalso());
-
-  test('iniciar carrega a sessão guardada, sem ir à rede', () async {
-    final servico = criar(auth, SessoesFalso(sessaoDeTeste()));
+  test('iniciar carrega a sessão guardada', () async {
+    final servico = criar(SessoesFalso(sessaoDeTeste()));
 
     await servico.iniciar();
 
     expect(servico.atual.value?.email, 'ana@exemplo.com');
-    expect(auth.renovacoes, 0);
   });
 
   test('entrou guarda a sessão e a torna a atual', () async {
     final armazenamento = SessoesFalso();
-    final servico = criar(auth, armazenamento);
+    final servico = criar(armazenamento);
     final sessao = sessaoDeTeste();
 
     await servico.entrou(sessao);
@@ -36,57 +28,28 @@ void main() {
 
   group('tokenDeAcesso', () {
     test('sem sessão, devolve nulo', () async {
-      expect(await criar(auth, SessoesFalso()).tokenDeAcesso(), isNull);
+      expect(await criar(SessoesFalso()).tokenDeAcesso(), isNull);
     });
 
-    test('access token válido: devolve sem renovar', () async {
+    test('token válido: devolve o token da sessão', () async {
       final sessao = sessaoDeTeste();
-      final servico = criar(auth, SessoesFalso(sessao));
+      final servico = criar(SessoesFalso(sessao));
       await servico.iniciar();
 
       expect(await servico.tokenDeAcesso(), sessao.accessToken);
-      expect(auth.renovacoes, 0);
+      expect(servico.atual.value, isNotNull);
     });
 
-    test('access token vencido: renova, guarda o novo par e devolve o novo token', () async {
+    test('token vencido: devolve nulo, apaga a sessão e avisa uma vez', () async {
       final armazenamento = SessoesFalso(
-        sessaoDeTeste(accessExpira: DateTime.now().subtract(const Duration(minutes: 5))),
+        sessaoDeTeste(expira: DateTime.now().subtract(const Duration(minutes: 5))),
       );
-      final servico = criar(auth, armazenamento);
-      await servico.iniciar();
-
-      final token = await servico.tokenDeAcesso();
-
-      expect(auth.renovacoes, 1);
-      expect(token, servico.atual.value!.accessToken);
-      expect(armazenamento.guardada!.refreshToken, 'refresh-2');
-    });
-  });
-
-  group('renovar', () {
-    test('três pedidos ao mesmo tempo viram uma só ida ao servidor', () async {
-      final liberar = Completer<void>();
-      auth.espera = liberar.future;
-      final servico = criar(auth, SessoesFalso(sessaoDeTeste()));
-      await servico.iniciar();
-
-      final pedidos = [servico.renovar(), servico.renovar(), servico.renovar()];
-      liberar.complete();
-      final tokens = await Future.wait(pedidos);
-
-      expect(auth.renovacoes, 1);
-      expect(tokens.toSet(), hasLength(1));
-    });
-
-    test('servidor recusou: encerra a sessão, apaga e avisa a casca do app', () async {
-      auth.erro = const SessaoRecusada();
-      final armazenamento = SessoesFalso(sessaoDeTeste());
-      final servico = criar(auth, armazenamento);
+      final servico = criar(armazenamento);
       await servico.iniciar();
       var avisos = 0;
-      servico.encerradasPeloServidor.listen((_) => avisos++);
+      servico.expiradas.listen((_) => avisos++);
 
-      final token = await servico.renovar();
+      final token = await servico.tokenDeAcesso();
       await Future<void>.delayed(Duration.zero);
 
       expect(token, isNull);
@@ -94,53 +57,81 @@ void main() {
       expect(armazenamento.guardada, isNull);
       expect(avisos, 1);
     });
+  });
 
-    test('sem internet: mantém a sessão e repassa o erro', () async {
-      auth.erro = const SemConexao();
-      final armazenamento = SessoesFalso(sessaoDeTeste());
-      final servico = criar(auth, armazenamento);
+  group('expirou', () {
+    test('token da sessão atual: apaga, e avisa a casca do app', () async {
+      final sessao = sessaoDeTeste();
+      final armazenamento = SessoesFalso(sessao);
+      final servico = criar(armazenamento);
       await servico.iniciar();
+      var avisos = 0;
+      servico.expiradas.listen((_) => avisos++);
 
-      await expectLater(servico.renovar(), throwsA(isA<SemConexao>()));
+      await servico.expirou(sessao.accessToken);
+      await Future<void>.delayed(Duration.zero);
 
-      expect(servico.atual.value, isNotNull);
-      expect(armazenamento.guardada, isNotNull);
+      expect(servico.atual.value, isNull);
+      expect(armazenamento.guardada, isNull);
+      expect(avisos, 1);
     });
 
-    test('depois de falhar, a próxima tentativa vai ao servidor de novo', () async {
-      auth.erro = const SemConexao();
-      final servico = criar(auth, SessoesFalso(sessaoDeTeste()));
+    test('token de uma sessão antiga: a sessão nova continua', () async {
+      final antiga = sessaoDeTeste();
+      final servico = criar(SessoesFalso());
+      await servico.entrou(antiga);
+      final nova = sessaoDeTeste();
+      await servico.entrou(nova);
+      var avisos = 0;
+      servico.expiradas.listen((_) => avisos++);
+
+      await servico.expirou(antiga.accessToken);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(servico.atual.value, same(nova));
+      expect(avisos, 0);
+    });
+
+    test('várias respostas 401 ao mesmo tempo avisam uma vez só', () async {
+      final sessao = sessaoDeTeste();
+      final servico = criar(SessoesFalso(sessao));
       await servico.iniciar();
-      await expectLater(servico.renovar(), throwsA(isA<SemConexao>()));
+      var avisos = 0;
+      servico.expiradas.listen((_) => avisos++);
 
-      auth.erro = null;
-      await servico.renovar();
+      await Future.wait([
+        servico.expirou(sessao.accessToken),
+        servico.expirou(sessao.accessToken),
+        servico.expirou(sessao.accessToken),
+      ]);
+      await Future<void>.delayed(Duration.zero);
 
-      expect(auth.renovacoes, 2);
+      expect(avisos, 1);
     });
   });
 
   group('sair', () {
-    test('apaga a sessão, avisa o servidor e NÃO dispara a saída forçada', () async {
+    test('apaga a sessão e NÃO dispara a saída forçada', () async {
       final armazenamento = SessoesFalso(sessaoDeTeste());
-      final servico = criar(auth, armazenamento);
+      final servico = criar(armazenamento);
       await servico.iniciar();
       var avisos = 0;
-      servico.encerradasPeloServidor.listen((_) => avisos++);
+      servico.expiradas.listen((_) => avisos++);
 
       await servico.sair();
       await Future<void>.delayed(Duration.zero);
 
       expect(servico.atual.value, isNull);
       expect(armazenamento.guardada, isNull);
-      expect(auth.saidas, 1);
       expect(avisos, 0);
     });
 
     test('sem sessão, não faz nada além de limpar', () async {
-      await criar(auth, SessoesFalso()).sair();
+      final armazenamento = SessoesFalso();
 
-      expect(auth.saidas, 0);
+      await criar(armazenamento).sair();
+
+      expect(armazenamento.limpezas, 1);
     });
   });
 }

@@ -42,7 +42,7 @@ class _NexaAppState extends State<NexaApp> {
   @override
   void initState() {
     super.initState();
-    _encerradas = _sessoes.encerradasPeloServidor.listen(
+    _encerradas = _sessoes.expiradas.listen(
       (_) => _voltarAoInicio(),
     );
   }
@@ -53,8 +53,8 @@ class _NexaAppState extends State<NexaApp> {
     super.dispose();
   }
 
-  /// O servidor recusou a sessão (refresh vencido, revogado ou reusado): leva a
-  /// pessoa ao Início, sem volta, e explica o porquê.
+  /// A sessão acabou sozinha (token de 8 horas vencido ou recusado pelo
+  /// Spring): leva a pessoa ao Início, sem volta, e explica o porquê.
   void _voltarAoInicio() {
     final navegador = _navegador.currentState;
     if (navegador == null) return;

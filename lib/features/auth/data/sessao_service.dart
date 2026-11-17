@@ -1,32 +1,32 @@
 import 'dart:async';
 
-import 'package:fe_nexa_app/features/auth/data/auth_repository.dart';
+import 'package:fe_nexa_app/features/auth/data/sessao.dart';
 import 'package:fe_nexa_app/features/auth/data/sessao_repository.dart';
 import 'package:flutter/foundation.dart';
 
 /// O "gerente" da sessão: o único lugar que sabe quem está logado e que
-/// decide quando renovar os tokens ou encerrar a sessão.
+/// decide quando a sessão acaba.
+///
+/// O Spring entrega um JWT de 8 horas e não tem refresh token. Quando o token
+/// vence (ou o Spring deixa de aceitá-lo), a sessão acaba e a pessoa entra de
+/// novo.
 class SessaoService {
   SessaoService({
-    required this._auth,
     required this._armazenamento,
     DateTime Function()? agora,
   }) : _agora = agora ?? DateTime.now;
 
-  final AuthRepository _auth;
   final SessaoRepository _armazenamento;
   final DateTime Function() _agora;
 
   final ValueNotifier<Sessao?> _atual = ValueNotifier(null);
-  final StreamController<void> _encerradas = StreamController<void>.broadcast();
-
-  /// Renovação em andamento.
-  Future<String?>? _renovacaoEmAndamento;
+  final StreamController<void> _expiradas = StreamController<void>.broadcast();
 
   ValueListenable<Sessao?> get atual => _atual;
 
-  /// Avisa quando o SERVIDOR encerrou a sessão (refresh recusado).
-  Stream<void> get encerradasPeloServidor => _encerradas.stream;
+  /// Avisa quando a sessão acabou SEM a pessoa pedir (token vencido ou recusado
+  /// pelo Spring). "Sair" não passa por aqui.
+  Stream<void> get expiradas => _expiradas.stream;
 
   /// Lê a sessão guardada no aparelho. Chame uma vez, antes de desenhar a
   /// primeira tela. Não vai à rede: abrir o app offline continua logado.
@@ -42,49 +42,33 @@ class SessaoService {
     } catch (_) {}
   }
 
-  /// O access token para usar numa chamada agora, renovando antes se ele
-  /// venceu. `null` se não há sessão (ou se o servidor a recusou na renovação).
+  /// O token para usar numa chamada agora. `null` se não há sessão, ou se o
+  /// token venceu (nesse caso a sessão acaba aqui mesmo).
   Future<String?> tokenDeAcesso() async {
     final sessao = _atual.value;
     if (sessao == null) return null;
     if (!sessao.accessExpirou(agora: _agora())) return sessao.accessToken;
-    return renovar();
+
+    await expirou(sessao.accessToken);
+    return null;
   }
 
-  /// Troca o par de tokens pelo refresh token.
-  Future<String?> renovar() {
-    return _renovacaoEmAndamento ??= _renovar().whenComplete(
-      () => _renovacaoEmAndamento = null,
-    );
-  }
+  /// O [token] não vale mais (venceu, ou o Spring o recusou com 401). Se ele
+  /// ainda é o da sessão atual, apaga a sessão e avisa [expiradas], que leva a
+  /// pessoa ao Início.
+  ///
+  /// Se a pessoa já entrou de novo com outro token, nada acontece: uma
+  /// resposta atrasada não pode derrubar a sessão nova.
+  Future<void> expirou(String token) async {
+    if (_atual.value?.accessToken != token) return;
 
-  Future<String?> _renovar() async {
-    final sessao = _atual.value;
-    if (sessao == null) return null;
-
-    try {
-      final nova = await _auth.renovar(sessao);
-      // Guarda ANTES de usar: o refresh antigo já não vale no servidor, então
-      // perder o novo agora seria perder a sessão.
-      _atual.value = nova;
-      await _armazenamento.salvar(nova);
-      return nova.accessToken;
-    } on SessaoRecusada {
-      await _encerrarNoAparelho();
-      _encerradas.add(null);
-      return null;
-    }
-  }
-
-  /// "Sair": avisa o servidor (para revogar o refresh token) e apaga a sessão
-  /// do aparelho.
-  Future<void> sair() async {
-    final sessao = _atual.value;
     await _encerrarNoAparelho();
-    if (sessao != null) {
-      unawaited(_auth.sair(sessao));
-    }
+    _expiradas.add(null);
   }
+
+  /// "Sair": apaga a sessão do aparelho. O Spring não guarda nada para
+  /// revogar, então não há o que avisar a ele.
+  Future<void> sair() => _encerrarNoAparelho();
 
   Future<void> _encerrarNoAparelho() async {
     _atual.value = null;
@@ -94,6 +78,5 @@ class SessaoService {
 
 /// A instância que o app usa.
 final SessaoService sessaoService = SessaoService(
-  auth: authRepository,
   armazenamento: SessaoRepositorySegura(),
 );

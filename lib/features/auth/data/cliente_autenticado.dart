@@ -5,15 +5,12 @@ import 'package:http/http.dart' as http;
 /// `post`, sem se preocupar com token.
 ///
 /// Em cada chamada ele:
-/// 1. pede ao [SessaoService] um access token válido (renovando se preciso) e
-///    o coloca em `Authorization: Bearer ...`;
-/// 2. se o Spring responder 401 mesmo assim (token revogado ou relógio
-///    desencontrado), renova uma vez e repete a chamada;
-/// 3. se ainda assim for 401, devolve o 401: a sessão já foi encerrada pelo
-///    [SessaoService] e a casca do app leva a pessoa ao Início.
-///
-/// Só aceita requisições simples ([http.Request]: `get`, `post` com corpo em
-/// texto), que podem ser repetidas. Upload em partes não passa por aqui.
+/// 1. pede ao [SessaoService] o token da sessão e o coloca em
+///    `Authorization: Bearer ...` (sem sessão, a chamada vai sem cabeçalho);
+/// 2. se o Spring responder 401 para uma chamada que levou token, avisa o
+///    [SessaoService] que a sessão acabou (a casca do app leva a pessoa ao
+///    Início) e devolve o 401. Não há refresh token, então não há o que
+///    renovar nem repetir.
 class ClienteAutenticado extends http.BaseClient {
   ClienteAutenticado({required this._sessoes, http.Client? interno})
     : _interno = interno ?? http.Client();
@@ -23,33 +20,14 @@ class ClienteAutenticado extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    if (request is! http.Request) {
-      throw ArgumentError('ClienteAutenticado só envia http.Request.');
-    }
-
     final token = await _sessoes.tokenDeAcesso();
-    final resposta = await _interno.send(_comToken(request, token));
-    if (resposta.statusCode != 401 || token == null) return resposta;
+    if (token != null) request.headers['Authorization'] = 'Bearer $token';
 
-    final novoToken = await _sessoes.renovar();
-    if (novoToken == null) return resposta;
-
-    // A primeira resposta não será usada: esvazia para liberar a conexão.
-    await resposta.stream.drain<void>();
-    return _interno.send(_comToken(request, novoToken));
-  }
-
-  /// Uma requisição só pode ser enviada uma vez, então cada tentativa usa uma
-  /// cópia, com o token da vez.
-  http.Request _comToken(http.Request original, String? token) {
-    final copia = http.Request(original.method, original.url)
-      ..headers.addAll(original.headers)
-      ..bodyBytes = original.bodyBytes
-      ..followRedirects = original.followRedirects
-      ..maxRedirects = original.maxRedirects
-      ..persistentConnection = original.persistentConnection;
-    if (token != null) copia.headers['Authorization'] = 'Bearer $token';
-    return copia;
+    final resposta = await _interno.send(request);
+    if (resposta.statusCode == 401 && token != null) {
+      await _sessoes.expirou(token);
+    }
+    return resposta;
   }
 
   @override

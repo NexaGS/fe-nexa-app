@@ -24,12 +24,6 @@ class ContaDeColaborador implements Exception {
   const ContaDeColaborador();
 }
 
-/// O Spring recusou o refresh token (vencido, já usado, revogado ou conta
-/// removida). Não há o que tentar de novo: a pessoa precisa entrar outra vez.
-class SessaoRecusada implements Exception {
-  const SessaoRecusada();
-}
-
 class SemConexao implements Exception {
   const SemConexao();
 }
@@ -51,15 +45,6 @@ abstract interface class AuthRepository {
     required String confirmarSenha,
     required bool aceitouLocalizacao,
   });
-
-  /// Troca o refresh token de [atual] por uma sessão nova (access e refresh
-  /// novos). Lança [SessaoRecusada] se o Spring recusar, [SemConexao] se não
-  /// deu para falar com ele e [ErroInesperado] para qualquer outra resposta.
-  Future<Sessao> renovar(Sessao atual);
-
-  /// Avisa o Spring que esta sessão acabou, para ele revogar o refresh token.
-  /// Falha em silêncio: sair do app nunca pode depender da internet.
-  Future<void> sair(Sessao atual);
 }
 
 /// Conversa de verdade com o Spring.
@@ -112,28 +97,6 @@ class AuthRepositoryHttp implements AuthRepository {
     return _lerSessao(resposta, emailNormalizado);
   }
 
-  @override
-  Future<Sessao> renovar(Sessao atual) async {
-    final resposta = await _postar('/api/auth/refresh', {
-      'refreshToken': atual.refreshToken,
-    });
-
-    if (resposta.statusCode == 401) throw const SessaoRecusada();
-    if (resposta.statusCode != 200) throw const ErroInesperado();
-
-    return _lerSessao(resposta, atual.email);
-  }
-
-  @override
-  Future<void> sair(Sessao atual) async {
-    try {
-      await _postar('/api/auth/logout', {'refreshToken': atual.refreshToken});
-    } catch (_) {
-      // Sem internet o servidor continua com o refresh token até ele vencer;
-      // o aparelho já o apagou, que é o que importa para esta pessoa.
-    }
-  }
-
   /// "  Ana@Exemplo.com " e "ana@exemplo.com" têm que ser a mesma conta.
   String _normalizar(String email) => email.trim().toLowerCase();
 
@@ -162,14 +125,10 @@ class AuthRepositoryHttp implements AuthRepository {
   Sessao _lerSessao(http.Response resposta, String email) {
     try {
       final json =
-      jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>;
-      final segundos = (json['refreshExpiresInSeconds'] as num).toInt();
-      return Sessao(
-        email: email,
-        accessToken: json['token'] as String,
-        refreshToken: json['refreshToken'] as String,
-        refreshExpiraEm: DateTime.now().add(Duration(seconds: segundos)),
-      );
+          jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>;
+      // O Spring responde `token`, `tokenType` e `expiresInSeconds`. A validade
+      // (8 horas) já vem dentro do próprio JWT, na claim `exp`.
+      return Sessao(email: email, accessToken: json['token'] as String);
     } on FormatException {
       throw const ErroInesperado();
     } on TypeError {
