@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fe_nexa_app/app/app.dart';
+import 'package:fe_nexa_app/features/auth/data/sessao.dart';
+import 'package:fe_nexa_app/features/auth/data/sessao_service.dart';
 import 'package:fe_nexa_app/features/perfil/data/preferencias_repository.dart';
 
 Future<void> main() async {
@@ -13,5 +15,15 @@ Future<void> main() async {
     // Sem ler as preferências, valem os padrões.
   }
 
-  runApp(const NexaApp());
+  // Lê a sessão guardada no aparelho (o token de 8 horas do login). Com ela, o
+  // app abre direto na Home; sem ela (ou com o token vencido), no Início.
+  Sessao? sessao;
+  try {
+    await sessaoService.iniciar();
+    sessao = sessaoService.atual.value;
+  } catch (_) {
+    // Sem conseguir ler o cofre, a pessoa entra de novo.
+  }
+
+  runApp(NexaApp(sessaoInicial: sessao));
 }
