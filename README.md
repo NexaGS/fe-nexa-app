@@ -16,6 +16,7 @@ Aplicativo mobile que mostra quanto tempo de fila há nas unidades de saúde per
 [![FIAP](https://img.shields.io/badge/FIAP-Global_Solution-ED145B?style=for-the-badge)](#integrantes)
 [![Status](https://img.shields.io/badge/status-prot%C3%B3tipo-B7D36B?style=for-the-badge)](#estado-atual-e-limitações)
 
+[Baixar o APK](https://github.com/NexaGS/fe-nexa-app/releases/latest) ·
 [Vídeo de apresentação](https://youtu.be/fr3oQiION1I) ·
 [Protótipo no Figma](https://www.figma.com/design/AUXujrUnSnl1BxEcAWHdPm/Untitled) ·
 [Back-end (Spring Boot)](https://github.com/NexaGS/nexa-springboot) ·
@@ -32,6 +33,7 @@ Aplicativo mobile que mostra quanto tempo de fila há nas unidades de saúde per
 ## Índice
 
 - [Sobre o projeto](#sobre-o-projeto)
+- [Baixar o app (Android)](#baixar-o-app-android)
 - [Telas](#telas)
 - [Funcionalidades](#funcionalidades)
 - [Como funciona](#como-funciona)
@@ -66,6 +68,29 @@ O Nexa mostra o tempo de espera de cada unidade próxima, direto no celular. A p
 4. O número **se atualiza sozinho**: na unidade há um totem de check-in e, quando alguém chega e se registra, o sistema recalcula a espera.
 
 Em qualquer tela, o botão **SAMU 192** fica à mão para quem tem sintomas graves.
+
+---
+
+## Baixar o app (Android)
+
+<table>
+  <tr>
+    <td align="center" width="200">
+      <img src="docs/img/qr-apk.png" alt="QR code para baixar o APK do Nexa" width="170"><br>
+      <sub>Aponte a câmera</sub>
+    </td>
+    <td>
+
+1. No celular, abra a [página da última versão](https://github.com/NexaGS/fe-nexa-app/releases/latest) e baixe o arquivo **`nexa.apk`** ([download direto](https://github.com/NexaGS/fe-nexa-app/releases/latest/download/nexa.apk)).
+2. Toque no arquivo baixado. Se o Android pedir, permita **instalar apps desta fonte**.
+3. Se aparecer o aviso do Play Protect, toque em **Instalar mesmo assim** (o app não está na Play Store).
+4. Abra o Nexa, crie uma conta e veja as unidades perto de você.
+
+O app já vem configurado para falar com a API hospedada na Azure.
+
+</td>
+  </tr>
+</table>
 
 ---
 
